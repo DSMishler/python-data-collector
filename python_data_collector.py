@@ -180,10 +180,11 @@ class heat3d_handler:
         f.close()
 
     # must be called on array with length at least 1, preferrably 2.
-    def calculate_error(self):
+    def calculate_max_percent_error(self):
         max_error = 0
         for key in self.current_runs:
-            myerror = gaussian_error(self.current_runs[key])
+            myerror =  gaussian_error(self.current_runs[key])
+            myerror /= mean(self.current_runs[key])
             if myerror > max_error:
                 max_error = myerror
         return max_error
@@ -198,12 +199,12 @@ class heat3d_handler:
             self.run_once(n, N)
             self.parse_tmp(n, N)
             nruns += 1
-        myerror = self.calculate_error()
+        myerror = self.calculate_max_percent_error()
         while(myerror > error_max):
             print(f"    run {nruns}")
             self.run_once(n, N)
             self.parse_tmp(n, N)
-            myerror = self.calculate_error()
+            myerror = self.calculate_max_percent_error()
             nruns += 1
         time = mean(self.current_runs["time"])
         dt_time = mean(self.current_runs["dt_time"])
