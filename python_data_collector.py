@@ -13,10 +13,10 @@ output_fname = "dataout.csv"   # output csv of this program
 tmp_fname    = "mzz_tmp.txt"   # temporary filename for this program
 stderr_fname = "mzzerr_tmp.txt"# temporary filename for program errors
 
-help_message = "no help message yet, King. Good luck."
-"""
-no help message yet, King. Good luck.
-"""
+help_message = "python data collector. A program designed to make collecting\n"
+               "data easy and robust in your workflow. Pass any of the\n"
+               "following through the command line as separate arguments\n"
+               "e.g. error 0.05"
 
 # Ugh, no mean and std on weaver
 def mean(data):
@@ -44,16 +44,16 @@ def gaussian_error(data):
 
 def print_global_parameters():
     print("global parameters of python data collector")
-    print(f"    error maximum :  {error_max}")
-    print(f"    minimum nruns :  {run_min}")
-    print(f"    range minimum :  {range_min}")
-    print(f"    range maximum :  {range_max}")
-    print(f"    range stride  :  {range_stride}")
-    print(f"    preamble      :  {run_preamble}")
-    print(f"    file to run   :  {run_fname}")
-    print(f"    output file   :  {output_fname}")
-    print(f"    storage file  :  {tmp_fname}")
-    print(f"    stderr file   :  {stderr_fname}")
+    print(f"    error maximum (error)  :  {error_max}")
+    print(f"    minimum nruns (runs)   :  {run_min}")
+    print(f"    range minimum (min)    :  {range_min}")
+    print(f"    range maximum (max)    :  {range_max}")
+    print(f"    range stride  (stride) :  {range_stride}")
+    print(f"    preamble      (pre)    :  {run_preamble}")
+    print(f"    file to run   (rf)     :  {run_fname}")
+    print(f"    output file   (of)     :  {output_fname}")
+    print(f"    storage file  (tf)     :  {tmp_fname}")
+    print(f"    stderr file   (ef)     :  {stderr_fname}")
 
 def parse_args(args):
     global error_max
@@ -72,6 +72,7 @@ def parse_args(args):
         this_arg = args[i].lower()
         if this_arg in ["help", "-help", "--help", "-h", "--h"]:
             print(help_message)
+            print_global_parameters()
             exit()
         elif this_arg in ["error", "max_error"]:
             i += 1
@@ -88,7 +89,7 @@ def parse_args(args):
         elif this_arg in ["stride", "range_stride"]:
             i += 1
             range_stride = int(args[i])
-        elif this_arg in ["run_preamble", "rp", "preamble"]:
+        elif this_arg in ["run_preamble", "pre", "preamble"]:
             i += 1
             run_preamble = args[i]
         elif this_arg in ["run_fname", "rf"]:
@@ -201,7 +202,8 @@ class heat3d_handler:
             nruns += 1
         myerror = self.calculate_max_percent_error()
         while(myerror > error_max):
-            print(f"    run {nruns}")
+            print(f"    run {nruns} (needed because error is currently too"
+                  f" high at {myerror*100}\%)")
             self.run_once(n, N)
             self.parse_tmp(n, N)
             myerror = self.calculate_max_percent_error()
@@ -225,16 +227,16 @@ class heat3d_handler:
             obj1 = return_dict[key1]
             if type(obj1) is not dict:
                 string += key1
-                string += ", "
+                string += ","
             else:
                 for key2 in obj1:
                     obj2 = obj1[key2]
                     if type(obj2) is not dict:
                         string += key1+"-"+key2
-                        string += ", "
+                        string += ","
                     else:
-                        print(f"unknown error on line {__LINE__}: possibly triply layered dict?")
-        string = string[:-2] + "\n"
+                        print(f"unknown error: possibly triply layered dict?")
+        string = string[:-1] + "\n"
         f = open(output_fname, "w")
         f.write(string)
         f.close()
@@ -252,15 +254,15 @@ class heat3d_handler:
                     if type(obj2) is not dict:
                         array.append(obj2)
                     else:
-                        print(f"unknown error on line {__LINE__}: possibly triply layered dict?")
+                        print(f"unknown error: possibly triply layered dict?")
         
         if not os.path.isfile(output_fname):
             self.write_init(return_dict)
 
         string = ""
         for thing in array:
-            string += str(thing) + ", "
-        string = string[:-2] + "\n"
+            string += str(thing) + ","
+        string = string[:-1] + "\n"
         f = open(output_fname, "a")
         f.write(string)
         f.close()
@@ -274,10 +276,14 @@ if __name__ == "__main__":
         exit()
 
     # always overwrite old data
-    os.system(f"rm {output_fname}")
+    os.system(f"rm -f {output_fname}")
 
-    # TODO: choose a handler
-    handler = heat3d_handler()
+    if "heat3d" in run_fname.lower():
+        handler = heat3d_handler()
+    else:
+        print(f"ERROR: I don't know what program you're running, "
+              f" so I don't know what handler to use.")
+        exit()
 
     current_n = range_min
     while current_n <= range_max:
