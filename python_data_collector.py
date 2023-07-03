@@ -13,10 +13,10 @@ output_fname = "dataout.csv"   # output csv of this program
 tmp_fname    = "mzz_tmp.txt"   # temporary filename for this program
 stderr_fname = "mzzerr_tmp.txt"# temporary filename for program errors
 
-help_message = "python data collector. A program designed to make collecting\n"
-               "data easy and robust in your workflow. Pass any of the\n"
-               "following through the command line as separate arguments\n"
-               "e.g. error 0.05"
+help_message = "python data collector. A program designed to make collecting"
+help_message += "data easy and robust in your workflow. Pass any of the"
+help_message += "following through the command line as separate arguments"
+help_message += "(e.g. stride 5)."
 
 # Ugh, no mean and std on weaver
 def mean(data):
@@ -267,6 +267,154 @@ class heat3d_handler:
         f.write(string)
         f.close()
 
+class cpybench_handler:
+    def __init__(self):
+        self.data = dict()
+        self.current_runs = {}
+        self.refresh_current_runs()
+        return
+    def refresh_current_runs(self):
+        self.current_runs = {"time" : [], "time_1to2": [], "time_2to1": []}
+    def run_once(self, n, N):
+        commandstr = ""
+        if (run_preamble is not None):
+            commandstr += f"{run_preamble} "
+        commandstr += f"{run_fname} "
+        commandstr += f"-X {n} "
+        commandstr += f"-Y {n} "
+        commandstr += f"-Z {n} "
+        commandstr += f"1>{tmp_fname} "
+        commandstr += f"2>{stderr_fname}"
+        print(commandstr)
+        os.system(commandstr)
+        f = open(stderr_fname, "r")
+        ftext = f.read()
+        if len(ftext) > 0:
+            print("        warning: this run completed, but stderr output was nonempty")
+            # print(ftext)
+        f.close()
+    def parse_tmp(self, n, N):
+        f = open(tmp_fname, "r")
+
+        time = -1
+        time_1to2 = -1
+        time_2to1 = -1
+
+        lines = f.read().split('\n')
+        for i in range(len(lines)):
+            words = lines[i].split()
+            if len(words) == 0:
+                continue
+            try:
+                int(words[0])
+            except ValueError:
+                continue
+            if int(words[0]) == N:
+                for j in range(len(words)):
+                    if words[j] == "Time":
+                        time = float(words[j+1].replace('(',''))
+                        break
+                # next line is the last line
+                words = lines[i+1].split()
+                for j in range(len(words)):
+                    if words[j] == "2:":
+                        time_1to2 = float(words[j+1])
+                    if words[j] == "1:":
+                        time_2to1 = float(words[j+1])
+
+                break
+        self.current_runs["time"].append(time)
+        self.current_runs["time_2to1"].append(time_2to1)
+        self.current_runs["time_1to2"].append(time_1to2)
+
+        f.close()
+
+    # must be called on array with length at least 1, preferrably 2.
+    def calculate_max_percent_error(self):
+        max_error = 0
+        for key in self.current_runs:
+            myerror =  gaussian_error(self.current_runs[key])
+            myerror /= mean(self.current_runs[key])
+            if myerror > max_error:
+                max_error = myerror
+        return max_error
+
+    def perform_runs_for(self, n, N):
+        global error_max
+        global run_min
+        nruns = 0
+        self.refresh_current_runs()
+        for i in range(run_min):
+            print(f"    run {nruns}")
+            self.run_once(n, N)
+            self.parse_tmp(n, N)
+            nruns += 1
+        myerror = self.calculate_max_percent_error()
+        while(myerror > error_max):
+            print(f"    run {nruns} (needed because error is currently too"
+                  f" high at {myerror*100}\%)")
+            self.run_once(n, N)
+            self.parse_tmp(n, N)
+            myerror = self.calculate_max_percent_error()
+            nruns += 1
+        time = mean(self.current_runs["time"])
+        time_1to2 = mean(self.current_runs["time_1to2"])
+        time_2to1 = mean(self.current_runs["time_2to1"])
+        time_err = gaussian_error(self.current_runs["time"])
+        time_1to2_err = gaussian_error(self.current_runs["time_1to2"])
+        time_2to1_err = gaussian_error(self.current_runs["time_2to1"])
+        return {"n" : n,
+                "N" : N,
+                "time": {"mean" : time, "error" :time_err},
+                "time_1to2": {"mean" : time_1to2, "error" :time_1to2_err},
+                "time_2to1": {"mean" : time_2to1, "error" :time_2to1_err},
+                "nruns" : nruns}
+
+    def write_init(self, return_dict):
+        string = ""
+        for key1 in return_dict:
+            obj1 = return_dict[key1]
+            if type(obj1) is not dict:
+                string += key1
+                string += ","
+            else:
+                for key2 in obj1:
+                    obj2 = obj1[key2]
+                    if type(obj2) is not dict:
+                        string += key1+"-"+key2
+                        string += ","
+                    else:
+                        print(f"unknown error: possibly triply layered dict?")
+        string = string[:-1] + "\n"
+        f = open(output_fname, "w")
+        f.write(string)
+        f.close()
+
+
+    def write(self, return_dict):
+        array = []
+        for key1 in return_dict:
+            obj1 = return_dict[key1]
+            if type(obj1) is not dict:
+                array.append(obj1)
+            else:
+                for key2 in obj1:
+                    obj2 = obj1[key2]
+                    if type(obj2) is not dict:
+                        array.append(obj2)
+                    else:
+                        print(f"unknown error: possibly triply layered dict?")
+        
+        if not os.path.isfile(output_fname):
+            self.write_init(return_dict)
+
+        string = ""
+        for thing in array:
+            string += str(thing) + ","
+        string = string[:-1] + "\n"
+        f = open(output_fname, "a")
+        f.write(string)
+        f.close()
 
 
 if __name__ == "__main__":
@@ -280,6 +428,10 @@ if __name__ == "__main__":
 
     if "heat3d" in run_fname.lower():
         handler = heat3d_handler()
+        task = "heat3d"
+    if "cpybench" in run_fname.lower():
+        handler = cpybench_handler()
+        task = "cpybench"
     else:
         print(f"ERROR: I don't know what program you're running, "
               f" so I don't know what handler to use.")
@@ -287,7 +439,7 @@ if __name__ == "__main__":
 
     current_n = range_min
     while current_n <= range_max:
-        print(f"task heat3d with n={current_n}")
+        print(f"task {task} with n={current_n}")
         return_dict = handler.perform_runs_for(current_n, 10000)
         handler.write(return_dict)
         current_n += range_stride
