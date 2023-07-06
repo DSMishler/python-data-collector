@@ -2,7 +2,7 @@ import sys
 import os
 
 # defaults
-error_max    = .1              # error cutoff of  10%
+error_max    = .01             # error cutoff of 1%
 run_min      = 3               # minimum runs per data point
 range_min    = 10              # minimum range
 range_max    = 100             # maximum range
@@ -77,7 +77,7 @@ def parse_args(args):
         elif this_arg in ["error", "max_error"]:
             i += 1
             error_max = float(args[i])
-        elif this_arg in ["run_min", "runs"]:
+        elif this_arg in ["run_min", "runs", "nruns"]:
             i += 1
             run_min = int(args[i])
         elif this_arg in ["min", "range_min"]:
@@ -203,7 +203,7 @@ class heat3d_handler:
         myerror = self.calculate_max_percent_error()
         while(myerror > error_max):
             print(f"    run {nruns} (needed because error is currently too"
-                  f" high at {myerror*100}\%)")
+                  f" high at {myerror*100}%)")
             self.run_once(n, N)
             self.parse_tmp(n, N)
             myerror = self.calculate_max_percent_error()
@@ -274,7 +274,7 @@ class cpybench_handler:
         self.refresh_current_runs()
         return
     def refresh_current_runs(self):
-        self.current_runs = {"time" : [], "time_1to2": [], "time_2to1": []}
+        self.current_runs = {"time" : [], "time_TplusdT": []}
     def run_once(self, n, N):
         commandstr = ""
         if (run_preamble is not None):
@@ -285,7 +285,6 @@ class cpybench_handler:
         commandstr += f"-Z {n} "
         commandstr += f"1>{tmp_fname} "
         commandstr += f"2>{stderr_fname}"
-        print(commandstr)
         os.system(commandstr)
         f = open(stderr_fname, "r")
         ftext = f.read()
@@ -297,8 +296,7 @@ class cpybench_handler:
         f = open(tmp_fname, "r")
 
         time = -1
-        time_1to2 = -1
-        time_2to1 = -1
+        time_TplusdT = -1
 
         lines = f.read().split('\n')
         for i in range(len(lines)):
@@ -317,15 +315,12 @@ class cpybench_handler:
                 # next line is the last line
                 words = lines[i+1].split()
                 for j in range(len(words)):
-                    if words[j] == "2:":
-                        time_1to2 = float(words[j+1])
-                    if words[j] == "1:":
-                        time_2to1 = float(words[j+1])
+                    if words[j] == "TplusdT:":
+                        time_TplusdT = float(words[j+1])
 
                 break
         self.current_runs["time"].append(time)
-        self.current_runs["time_2to1"].append(time_2to1)
-        self.current_runs["time_1to2"].append(time_1to2)
+        self.current_runs["time_TplusdT"].append(time_TplusdT)
 
         f.close()
 
@@ -352,22 +347,19 @@ class cpybench_handler:
         myerror = self.calculate_max_percent_error()
         while(myerror > error_max):
             print(f"    run {nruns} (needed because error is currently too"
-                  f" high at {myerror*100}\%)")
+                  f" high at {myerror*100}%)")
             self.run_once(n, N)
             self.parse_tmp(n, N)
             myerror = self.calculate_max_percent_error()
             nruns += 1
         time = mean(self.current_runs["time"])
-        time_1to2 = mean(self.current_runs["time_1to2"])
-        time_2to1 = mean(self.current_runs["time_2to1"])
+        time_TplusdT = mean(self.current_runs["time_TplusdT"])
         time_err = gaussian_error(self.current_runs["time"])
-        time_1to2_err = gaussian_error(self.current_runs["time_1to2"])
-        time_2to1_err = gaussian_error(self.current_runs["time_2to1"])
+        time_TplusdT_err = gaussian_error(self.current_runs["time_TplusdT"])
         return {"n" : n,
                 "N" : N,
                 "time": {"mean" : time, "error" :time_err},
-                "time_1to2": {"mean" : time_1to2, "error" :time_1to2_err},
-                "time_2to1": {"mean" : time_2to1, "error" :time_2to1_err},
+                "time_TplusdT": {"mean" : time_TplusdT, "error" :time_TplusdT_err},
                 "nruns" : nruns}
 
     def write_init(self, return_dict):
