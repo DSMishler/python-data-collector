@@ -1,17 +1,24 @@
 import sys
 import os
+import socket
+
+
+# TODOs
+# - make a way to let CTRL+c kill the whole program
+
+hostname = socket.gethostname()
 
 # defaults
-error_max    = .01             # error cutoff of 1%
-run_min      = 3               # minimum runs per data point
-range_min    = 10              # minimum range
-range_max    = 100             # maximum range
-range_stride = 10              # run strides
-run_preamble = None            # preamble for runs, if necessary
-run_fname    = None            # file to run. required
-output_fname = "dataout.csv"   # output csv of this program
-tmp_fname    = "mzz_tmp.txt"   # temporary filename for this program
-stderr_fname = "mzzerr_tmp.txt"# temporary filename for program errors
+error_max    = .01                            # error cutoff of 1%
+run_min      = 3                              # minimum runs per data point
+range_min    = 10                             # minimum range
+range_max    = 100                            # maximum range
+range_stride = 10                             # run strides
+run_preamble = None                           # preamble for runs, if necessary
+run_fname    = None                           # file to run. required
+output_fname = "mzz_dataout_"+hostname+".csv" # output csv of this program
+tmp_fname    = "mzz_tmp_"+hostname+".txt"     # temp filename for this program
+stderr_fname = "mzz_err_tmp_"+hostname+".txt" # temp filename for program errors
 
 help_message = "python data collector. A program designed to make collecting"
 help_message += "data easy and robust in your workflow. Pass any of the"
@@ -121,13 +128,11 @@ def check_global_parameters():
 
 class heat3d_handler:
     def __init__(self):
-        self.data = dict()
-        self.current_runs = {}
-        self.refresh_current_runs()
+        self.name = "head3d handler"
         return
     def refresh_current_runs(self):
-        self.current_runs = {"time" : [], "compute_time": [], "dt_time": []}
-    def run_once(self, n, N):
+        return {"time" : [], "compute_time": [], "dt_time": []}
+    def generate_commandstr(self, n, N):
         commandstr = ""
         if (run_preamble is not None):
             commandstr += f"{run_preamble} "
@@ -137,14 +142,8 @@ class heat3d_handler:
         commandstr += f"-Z {n} "
         commandstr += f"1>{tmp_fname} "
         commandstr += f"2>{stderr_fname}"
-        os.system(commandstr)
-        f = open(stderr_fname, "r")
-        ftext = f.read()
-        if len(ftext) > 0:
-            print("        warning: this run completed, but stderr output was nonempty")
-            # print(ftext)
-        f.close()
-    def parse_tmp(self, n, N):
+        return commandstr
+    def parse_tmp(self, N, data_dest):
         f = open(tmp_fname, "r")
 
         time = -1
@@ -174,108 +173,19 @@ class heat3d_handler:
                         compute_time = float(words[j+1])
 
                 break
-        self.current_runs["time"].append(time)
-        self.current_runs["compute_time"].append(compute_time)
-        self.current_runs["dt_time"].append(dt_time)
+        data_dest["time"].append(time)
+        data_dest["compute_time"].append(compute_time)
+        data_dest["dt_time"].append(dt_time)
 
-        f.close()
-
-    # must be called on array with length at least 1, preferrably 2.
-    def calculate_max_percent_error(self):
-        max_error = 0
-        for key in self.current_runs:
-            myerror =  gaussian_error(self.current_runs[key])
-            myerror /= mean(self.current_runs[key])
-            if myerror > max_error:
-                max_error = myerror
-        return max_error
-
-    def perform_runs_for(self, n, N):
-        global error_max
-        global run_min
-        nruns = 0
-        self.refresh_current_runs()
-        for i in range(run_min):
-            print(f"    run {nruns}")
-            self.run_once(n, N)
-            self.parse_tmp(n, N)
-            nruns += 1
-        myerror = self.calculate_max_percent_error()
-        while(myerror > error_max):
-            print(f"    run {nruns} (needed because error is currently too"
-                  f" high at {myerror*100}%)")
-            self.run_once(n, N)
-            self.parse_tmp(n, N)
-            myerror = self.calculate_max_percent_error()
-            nruns += 1
-        time = mean(self.current_runs["time"])
-        dt_time = mean(self.current_runs["dt_time"])
-        compute_time = mean(self.current_runs["compute_time"])
-        time_err = gaussian_error(self.current_runs["time"])
-        dt_time_err = gaussian_error(self.current_runs["dt_time"])
-        compute_time_err = gaussian_error(self.current_runs["compute_time"])
-        return {"n" : n,
-                "N" : N,
-                "time": {"mean" : time, "error" :time_err},
-                "dt_time": {"mean" : dt_time, "error" :dt_time_err},
-                "compute_time": {"mean" : compute_time, "error" :compute_time_err},
-                "nruns" : nruns}
-
-    def write_init(self, return_dict):
-        string = ""
-        for key1 in return_dict:
-            obj1 = return_dict[key1]
-            if type(obj1) is not dict:
-                string += key1
-                string += ","
-            else:
-                for key2 in obj1:
-                    obj2 = obj1[key2]
-                    if type(obj2) is not dict:
-                        string += key1+"-"+key2
-                        string += ","
-                    else:
-                        print(f"unknown error: possibly triply layered dict?")
-        string = string[:-1] + "\n"
-        f = open(output_fname, "w")
-        f.write(string)
-        f.close()
-
-
-    def write(self, return_dict):
-        array = []
-        for key1 in return_dict:
-            obj1 = return_dict[key1]
-            if type(obj1) is not dict:
-                array.append(obj1)
-            else:
-                for key2 in obj1:
-                    obj2 = obj1[key2]
-                    if type(obj2) is not dict:
-                        array.append(obj2)
-                    else:
-                        print(f"unknown error: possibly triply layered dict?")
-        
-        if not os.path.isfile(output_fname):
-            self.write_init(return_dict)
-
-        string = ""
-        for thing in array:
-            string += str(thing) + ","
-        string = string[:-1] + "\n"
-        f = open(output_fname, "a")
-        f.write(string)
         f.close()
 
 class cpybench_handler:
     def __init__(self):
-        self.data = dict()
-        self.current_runs = {}
-        self.refresh_current_runs()
+        self.name = "cpybench handler"
         return
     def refresh_current_runs(self):
-        self.current_runs = {"time" : [], "time_TplusdT": []}
-    def run_once(self, n, N):
+        return {"time_total" : [], "time_TplusdT": []}
+    def generate_commandstr(self, n, N):
         commandstr = ""
         if (run_preamble is not None):
             commandstr += f"{run_preamble} "
@@ -285,14 +195,8 @@ class cpybench_handler:
         commandstr += f"-Z {n} "
         commandstr += f"1>{tmp_fname} "
         commandstr += f"2>{stderr_fname}"
-        os.system(commandstr)
-        f = open(stderr_fname, "r")
-        ftext = f.read()
-        if len(ftext) > 0:
-            print("        warning: this run completed, but stderr output was nonempty")
-            # print(ftext)
-        f.close()
-    def parse_tmp(self, n, N):
+        return commandstr
+    def parse_tmp(self, N, data_dest):
         f = open(tmp_fname, "r")
 
         time = -1
@@ -319,10 +223,33 @@ class cpybench_handler:
                         time_TplusdT = float(words[j+1])
 
                 break
-        self.current_runs["time"].append(time)
-        self.current_runs["time_TplusdT"].append(time_TplusdT)
+        data_dest["time_total"].append(time)
+        data_dest["time_TplusdT"].append(time_TplusdT)
 
         f.close()
+
+class run_manager:
+    def __init__(self, handler):
+        self.handler = handler
+        self.data = dict()
+        self.current_runs = {}
+        self.refresh_current_runs()
+        return
+    def refresh_current_runs(self):
+        self.current_runs = handler.refresh_current_runs()
+    def generate_commandstr(self, n, N):
+        return handler.generate_commandstr(n, N)
+    def run_once(self, n, N):
+        commandstr = self.generate_commandstr(n, N)
+        os.system(commandstr)
+        f = open(stderr_fname, "r")
+        ftext = f.read()
+        if len(ftext) > 0:
+            print("        warning: this run completed, but stderr output was nonempty")
+            print(ftext)
+        f.close()
+    def parse_tmp(self, N):
+        handler.parse_tmp(N, self.current_runs)
 
     # must be called on array with length at least 1, preferrably 2.
     def calculate_max_percent_error(self):
@@ -335,32 +262,31 @@ class cpybench_handler:
         return max_error
 
     def perform_runs_for(self, n, N):
-        global error_max
-        global run_min
         nruns = 0
         self.refresh_current_runs()
         for i in range(run_min):
             print(f"    run {nruns}")
             self.run_once(n, N)
-            self.parse_tmp(n, N)
+            self.parse_tmp(N)
             nruns += 1
         myerror = self.calculate_max_percent_error()
         while(myerror > error_max):
             print(f"    run {nruns} (needed because error is currently too"
                   f" high at {myerror*100}%)")
             self.run_once(n, N)
-            self.parse_tmp(n, N)
+            self.parse_tmp(N)
             myerror = self.calculate_max_percent_error()
             nruns += 1
-        time = mean(self.current_runs["time"])
-        time_TplusdT = mean(self.current_runs["time_TplusdT"])
-        time_err = gaussian_error(self.current_runs["time"])
-        time_TplusdT_err = gaussian_error(self.current_runs["time_TplusdT"])
-        return {"n" : n,
-                "N" : N,
-                "time": {"mean" : time, "error" :time_err},
-                "time_TplusdT": {"mean" : time_TplusdT, "error" :time_TplusdT_err},
-                "nruns" : nruns}
+        return_dict = {"n" : n}
+        return_dict["N"] = N
+        return_dict["nruns"] = nruns
+
+        for attr in self.current_runs:
+            attr_mean = mean(self.current_runs[attr])
+            attr_error  = gaussian_error(self.current_runs[attr])
+            return_dict[attr] = {"mean" : attr_mean, "error" : attr_error}
+
+        return return_dict
 
     def write_init(self, return_dict):
         string = ""
@@ -421,19 +347,28 @@ if __name__ == "__main__":
     if "heat3d" in run_fname.lower():
         handler = heat3d_handler()
         task = "heat3d"
-    if "cpybench" in run_fname.lower():
+    elif "cpybench" in run_fname.lower():
         handler = cpybench_handler()
         task = "cpybench"
     else:
-        print(f"ERROR: I don't know what program you're running, "
+        print(f"ERROR: I don't know what program you're running,"
               f" so I don't know what handler to use.")
         exit()
 
+    manager = run_manager(handler)
+
+
+
     current_n = range_min
+
+    ex_commandstr = manager.generate_commandstr(current_n,10000)
+    print(f"example command:")
+    print(f"```{ex_commandstr}```")
+
     while current_n <= range_max:
-        print(f"task {task} with n={current_n}")
-        return_dict = handler.perform_runs_for(current_n, 10000)
-        handler.write(return_dict)
+        print(f"task {task} to {output_fname} with n={current_n}")
+        return_dict = manager.perform_runs_for(current_n, 10000)
+        manager.write(return_dict)
         current_n += range_stride
 
     os.system(f"rm {tmp_fname}")
