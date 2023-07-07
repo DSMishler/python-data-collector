@@ -5,6 +5,7 @@ import socket
 
 # TODOs
 # - make a way to let CTRL+c kill the whole program
+# - allow user to choose which handler to use
 
 hostname = socket.gethostname()
 
@@ -234,6 +235,53 @@ class cpybench_handler:
 
         f.close()
 
+class stream_benchmark_handler:
+    def __init__(self):
+        self.name = "stream benchmark handler"
+        return
+    def refresh_current_runs(self):
+        return {"time_total" : [], "time_stream": []}
+    def generate_commandstr(self, n, N):
+        commandstr = ""
+        if (run_preamble is not None):
+            commandstr += f"{run_preamble} "
+        commandstr += f"{run_fname} "
+        commandstr += f"-l {n} "
+        commandstr += f"1>{tmp_fname} "
+        commandstr += f"2>{stderr_fname}"
+        return commandstr
+    def parse_tmp(self, N, data_dest):
+        f = open(tmp_fname, "r")
+
+        time = -1
+        time_stream = -1
+
+        lines = f.read().split('\n')
+        for i in range(len(lines)):
+            words = lines[i].split()
+            if len(words) == 0:
+                continue
+            try:
+                int(words[0])
+            except ValueError:
+                continue
+            if int(words[0]) == N:
+                for j in range(len(words)):
+                    if words[j] == "Time":
+                        time = float(words[j+1].replace('(',''))
+                        break
+                # next line is the last line
+                words = lines[i+1].split()
+                for j in range(len(words)):
+                    if words[j] == "stream:":
+                        time_stream = float(words[j+1])
+
+                break
+        data_dest["time_total"].append(time)
+        data_dest["time_stream"].append(time_stream)
+
+        f.close()
+
 class run_manager:
     def __init__(self, handler):
         self.handler = handler
@@ -360,6 +408,9 @@ if __name__ == "__main__":
     elif "cpybench" in run_fname.lower():
         handler = cpybench_handler()
         task = "cpybench"
+    elif "stream" in run_fname.lower():
+        handler = stream_benchmark_handler()
+        task = "stream_benchmark"
     else:
         print(f"ERROR: I don't know what program you're running,"
               f" so I don't know what handler to use.")
