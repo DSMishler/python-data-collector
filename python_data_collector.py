@@ -11,6 +11,7 @@ hostname = socket.gethostname()
 # defaults
 error_max    = .01                            # error cutoff of 1%
 run_min      = 3                              # minimum runs per data point
+run_max      = 30                             # maximum runs per point (error)
 range_min    = 10                             # minimum range
 range_max    = 100                            # maximum range
 range_stride = 10                             # run strides
@@ -53,6 +54,7 @@ def print_global_parameters():
     print("global parameters of python data collector")
     print(f"    error maximum (error)  :  {error_max}")
     print(f"    minimum nruns (runs)   :  {run_min}")
+    print(f"    maximum nruns (runmax) :  {run_max}")
     print(f"    range minimum (min)    :  {range_min}")
     print(f"    range maximum (max)    :  {range_max}")
     print(f"    range stride  (stride) :  {range_stride}")
@@ -65,6 +67,7 @@ def print_global_parameters():
 def parse_args(args):
     global error_max
     global run_min
+    global run_max
     global range_min
     global range_max
     global range_stride
@@ -87,6 +90,9 @@ def parse_args(args):
         elif this_arg in ["run_min", "runs", "nruns"]:
             i += 1
             run_min = int(args[i])
+        elif this_arg in ["run_max", "runmax"]:
+            i += 1
+            run_max = int(args[i])
         elif this_arg in ["min", "range_min"]:
             i += 1
             range_min = int(args[i])
@@ -277,6 +283,10 @@ class run_manager:
             self.parse_tmp(N)
             myerror = self.calculate_max_percent_error()
             nruns += 1
+            if (nruns >= run_max):
+                print("ERROR: too many runs for this to make sense.")
+                print("(adjust rum_max if you think this was a mistake.)")
+                exit()
         return_dict = {"n" : n}
         return_dict["N"] = N
         return_dict["nruns"] = nruns
