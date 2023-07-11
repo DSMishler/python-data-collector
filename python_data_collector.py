@@ -241,16 +241,16 @@ class stream_benchmark_handler:
         return
     def refresh_current_runs(self):
         return {"time_total" : [], "time_stream": []}
-    def generate_commandstr(self, n, N):
+    def generate_commandstr(self, n, iterations):
         commandstr = ""
         if (run_preamble is not None):
             commandstr += f"{run_preamble} "
         commandstr += f"{run_fname} "
-        commandstr += f"-l {n} "
+        commandstr += f"-N {n} "
         commandstr += f"1>{tmp_fname} "
         commandstr += f"2>{stderr_fname}"
         return commandstr
-    def parse_tmp(self, N, data_dest):
+    def parse_tmp(self, iterations, data_dest):
         f = open(tmp_fname, "r")
 
         time = -1
@@ -265,7 +265,7 @@ class stream_benchmark_handler:
                 int(words[0])
             except ValueError:
                 continue
-            if int(words[0]) == N:
+            if int(words[0]) == iterations:
                 for j in range(len(words)):
                     if words[j] == "Time":
                         time = float(words[j+1].replace('(',''))
@@ -291,10 +291,10 @@ class run_manager:
         return
     def refresh_current_runs(self):
         self.current_runs = handler.refresh_current_runs()
-    def generate_commandstr(self, n, N):
-        return handler.generate_commandstr(n, N)
-    def run_once(self, n, N):
-        commandstr = self.generate_commandstr(n, N)
+    def generate_commandstr(self, n, iterations):
+        return handler.generate_commandstr(n, iterations)
+    def run_once(self, n, iterations):
+        commandstr = self.generate_commandstr(n, iterations)
         os.system(commandstr)
         f = open(stderr_fname, "r")
         ftext = f.read()
@@ -302,8 +302,8 @@ class run_manager:
             print("        warning: this run completed, but stderr output was nonempty")
             print(ftext)
         f.close()
-    def parse_tmp(self, N):
-        handler.parse_tmp(N, self.current_runs)
+    def parse_tmp(self, iterations):
+        handler.parse_tmp(iterations, self.current_runs)
 
     # must be called on array with length at least 1, preferrably 2.
     def calculate_max_percent_error(self):
@@ -315,20 +315,20 @@ class run_manager:
                 max_error = myerror
         return max_error
 
-    def perform_runs_for(self, n, N):
+    def perform_runs_for(self, n, iterations):
         nruns = 0
         self.refresh_current_runs()
         for i in range(run_min):
             print(f"    run {nruns}")
-            self.run_once(n, N)
-            self.parse_tmp(N)
+            self.run_once(n, iterations)
+            self.parse_tmp(iterations)
             nruns += 1
         myerror = self.calculate_max_percent_error()
         while(myerror > error_max):
             print(f"    run {nruns} (needed because error is currently too"
                   f" high at {myerror*100}%)")
-            self.run_once(n, N)
-            self.parse_tmp(N)
+            self.run_once(n, iterations)
+            self.parse_tmp(iterations)
             myerror = self.calculate_max_percent_error()
             nruns += 1
             if (nruns >= run_max):
@@ -336,7 +336,7 @@ class run_manager:
                 print("(adjust rum_max if you think this was a mistake.)")
                 exit()
         return_dict = {"n" : n}
-        return_dict["N"] = N
+        return_dict["iterations"] = iterations
         return_dict["nruns"] = nruns
 
         for attr in self.current_runs:
