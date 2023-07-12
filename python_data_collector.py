@@ -1,23 +1,25 @@
 import sys
 import os
 import socket
+import re
 
 
 # TODOs
-# - make a way to let CTRL+c kill the whole program
 # - allow user to choose which handler to use
+# - allow a more robust system to tell which N to use.
 
 hostname = socket.gethostname()
 
 # defaults
 error_max    = .01                            # error cutoff of 1%
-run_min      = 3                              # minimum runs per data point
+run_min      = 2                              # minimum runs per data point
 run_max      = 30                             # maximum runs per point (error)
 range_min    = 10                             # minimum range
 range_max    = 100                            # maximum range
 range_stride = 10                             # run strides
 run_preamble = None                           # preamble for runs, if necessary
 run_fname    = None                           # file to run. required
+run_ns_fname = None                           # file containing the n infos
 output_fname = "mzz_dataout_"+hostname+".csv" # output csv of this program
 tmp_fname    = "mzz_tmp_"+hostname+".txt"     # temp filename for this program
 stderr_fname = "mzz_err_tmp_"+hostname+".txt" # temp filename for program errors
@@ -27,7 +29,7 @@ help_message += "data easy and robust in your workflow. Pass any of the"
 help_message += "following through the command line as separate arguments"
 help_message += "(e.g. stride 5)."
 
-# Ugh, no mean and std on weaver
+# Ugh, no mean and std on weaver, so we will just write the utilities.
 def mean(data):
     n = len(data)
     msum = 0
@@ -49,6 +51,8 @@ def stdev(data):
 
 def gaussian_error(data):
     n = len(data)
+    if n == 1:
+        return data[0]
     return (stdev(data)/((n-1)**0.5)) # not sure if n-1 necessary, but safe
 
 def print_global_parameters():
@@ -60,6 +64,7 @@ def print_global_parameters():
     print(f"    range maximum (max)    :  {range_max}")
     print(f"    range stride  (stride) :  {range_stride}")
     print(f"    preamble      (pre)    :  {run_preamble}")
+    print(f"    range file    (nfile)  :  {run_ns_fname}")
     print(f"    file to run   (rf)     :  {run_fname}")
     print(f"    output file   (of)     :  {output_fname}")
     print(f"    storage file  (tf)     :  {tmp_fname}")
@@ -73,6 +78,7 @@ def parse_args(args):
     global range_max
     global range_stride
     global run_preamble
+    global run_ns_fname
     global run_fname
     global output_fname
     global tmp_fname
@@ -106,7 +112,10 @@ def parse_args(args):
         elif this_arg in ["run_preamble", "pre", "preamble"]:
             i += 1
             run_preamble = args[i]
-        elif this_arg in ["run_fname", "rf"]:
+        elif this_arg in ["nfile", "run_ns_fname", "nf"]:
+            i += 1
+            run_ns_fname = args[i]
+        elif this_arg in ["rfile", "run_fname", "rf"]:
             i += 1
             run_fname = args[i]
         elif this_arg in ["output_fname", "of", "output"]:
@@ -247,6 +256,7 @@ class stream_benchmark_handler:
             commandstr += f"{run_preamble} "
         commandstr += f"{run_fname} "
         commandstr += f"-N {n} "
+        commandstr += f"-i {iterations} "
         commandstr += f"1>{tmp_fname} "
         commandstr += f"2>{stderr_fname}"
         return commandstr
@@ -428,15 +438,32 @@ if __name__ == "__main__":
 
     current_n = range_min
 
-    ex_commandstr = manager.generate_commandstr(current_n,10000)
+    ex_commandstr = manager.generate_commandstr(555,888)
     print(f"example command:")
     print(f"```{ex_commandstr}```")
 
-    while current_n <= range_max:
+    run_ns = []
+
+
+    if run_ns_fname is None:
+        current_n = range_min
+        while current_n <= range_max:
+            run_ns.append(current_n)
+            current_n += range_stride
+    else:
+        f = open(run_ns_fname, "r")
+        filewords = re.split(r"[\n, ]", f.read())
+        for fileword in filewords:
+            if len(fileword) == 0:
+                continue
+            # else
+            run_ns.append(int(fileword))
+        f.close()
+
+    for current_n in run_ns:
         print(f"task {task} to {output_fname} with n={current_n}")
         return_dict = manager.perform_runs_for(current_n, 10000)
         manager.write(return_dict)
-        current_n += range_stride
 
     os.system(f"rm {tmp_fname}")
     os.system(f"rm {stderr_fname}")
