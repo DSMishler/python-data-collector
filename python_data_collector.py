@@ -125,7 +125,7 @@ def parse_args(args):
 
 def check_global_parameters():
     if run_fname is None:
-        print("ERROR: required to have a file to run")
+        print("ERROR: must have a command to run (rf)")
         return False
     if range_min > range_max:
         print("ERROR: range error")
@@ -304,6 +304,12 @@ class run_manager:
         f.close()
     def parse_tmp(self, iterations):
         handler.parse_tmp(iterations, self.current_runs)
+        for key in self.current_runs:
+            for element in self.current_runs[key]:
+                if element < 0:
+                    print(f"negative value detected ", end="")
+                    print(f"({element} for {key}). abort.")
+                    exit()
 
     # must be called on array with length at least 1, preferrably 2.
     def calculate_max_percent_error(self):
