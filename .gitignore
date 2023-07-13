@@ -1,5 +1,6 @@
 # vim files
 *.swp
 
-# data directories
+# data directories, pychache
 *data/
+__pycache__/
