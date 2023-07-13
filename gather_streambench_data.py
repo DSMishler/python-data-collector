@@ -61,6 +61,7 @@ def bmode_to_style(mode):
         return "pe"
 
 if __name__ == "__main__":
+    print(f"begin at {datetime.datetime.now()}")
     os.system(f"mkdir -p {data_dir}")
 
     generate_run_ns_file(run_ns_fname, 1e5, 1e8, 1.2)
@@ -103,4 +104,6 @@ if __name__ == "__main__":
                 print("detected pdc abort, manager also aborting")
                 exit()
 
+    os.system(f"rm -f {run_ns_fname}")
+    print(f"ended at {datetime.datetime.now()}")
 
