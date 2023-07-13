@@ -2,18 +2,18 @@ import sys
 import os
 import socket
 import re
+import pdcutils
 
 
 # TODOs
 # - allow user to choose which handler to use
-# - allow a more robust system to tell which N to use.
 
 hostname = socket.gethostname()
 
 # defaults
 error_max    = .01                            # error cutoff of 1%
 run_min      = 2                              # minimum runs per data point
-run_max      = 30                             # maximum runs per point (error)
+run_max      = 40                             # maximum runs per point (error)
 range_min    = 10                             # minimum range
 range_max    = 100                            # maximum range
 range_stride = 10                             # run strides
@@ -29,31 +29,6 @@ help_message += "data easy and robust in your workflow. Pass any of the"
 help_message += "following through the command line as separate arguments"
 help_message += "(e.g. stride 5)."
 
-# Ugh, no mean and std on weaver, so we will just write the utilities.
-def mean(data):
-    n = len(data)
-    msum = 0
-    for element in data:
-        msum += element
-    return msum/n
-
-def variance(data): # with Bessel's correction
-    n = len(data)
-    # n must be at least 2
-    vsum = 0
-    mmean= mean(data)
-    for element in data:
-        vsum += (element-mmean)**2
-    return vsum / (n-1)
-
-def stdev(data):
-    return (variance(data)**0.5)
-
-def gaussian_error(data):
-    n = len(data)
-    if n == 1:
-        return data[0]
-    return (stdev(data)/((n-1)**0.5)) # not sure if n-1 necessary, but safe
 
 def print_global_parameters():
     print("global parameters of python data collector")
@@ -325,8 +300,8 @@ class run_manager:
     def calculate_max_percent_error(self):
         max_error = 0
         for key in self.current_runs:
-            myerror =  gaussian_error(self.current_runs[key])
-            myerror /= mean(self.current_runs[key])
+            myerror =  pdcutils.gaussian_error(self.current_runs[key])
+            myerror /= pdcutils.mean(self.current_runs[key])
             if myerror > max_error:
                 max_error = myerror
         return max_error
@@ -356,8 +331,8 @@ class run_manager:
         return_dict["nruns"] = nruns
 
         for attr in self.current_runs:
-            attr_mean = mean(self.current_runs[attr])
-            attr_error  = gaussian_error(self.current_runs[attr])
+            attr_mean = pdcutils.mean(self.current_runs[attr])
+            attr_error  = pdcutils.gaussian_error(self.current_runs[attr])
             return_dict[attr] = {"mean" : attr_mean, "error" : attr_error}
 
         return return_dict
