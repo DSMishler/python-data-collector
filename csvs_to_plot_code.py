@@ -27,9 +27,9 @@ if __name__ == "__main__":
         vnames.append(vname)
         printstr = ""
         printstr += f"{vname} = pd.read_csv"
-        printstr += f"({csv})"
+        printstr += f"(\"{csv}\")"
         print(printstr)
 
     print(f"dfs = {vnames}".replace("'",""))
-    print(f"labels = {vnames}")
+    print(f"labels = {vnames}".replace("'", "\""))
 
