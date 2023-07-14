@@ -1,6 +1,9 @@
 # vim files
 *.swp
 
+# default python temp files
+mzz_*.txt
+
 # data directories, pychache
 *data/
 __pycache__/

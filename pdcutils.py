@@ -55,3 +55,9 @@ def generate_run_ns_file(fname, nmin, nmax, nmul):
         f.write("\n")
 
     f.close()
+
+def float_from_word(word):
+    remove_chars = ['(',')','[',']']
+    for target in remove_chars:
+        word = word.replace(target,'')
+    return float(word)

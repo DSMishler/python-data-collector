@@ -153,69 +153,20 @@ class heat3d_handler:
             if int(words[0]) == N:
                 for j in range(len(words)):
                     if words[j] == "Time":
-                        time = float(words[j+1].replace('(',''))
+                        time = pdcutils.float_from_word(words[j+1])
                         break
                 # next line is the last line
                 words = lines[i+1].split()
                 for j in range(len(words)):
                     if words[j] == "surface:":
-                        dt_time = float(words[j+1])
+                        dt_time = pdcutils.float_from_word(words[j+1])
                     if words[j] == "compute:":
-                        compute_time = float(words[j+1])
+                        compute_time = pdcutils.float_from_word(words[j+1])
 
                 break
         data_dest["time"].append(time)
         data_dest["compute_time"].append(compute_time)
         data_dest["dt_time"].append(dt_time)
-
-        f.close()
-
-class cpybench_handler:
-    def __init__(self):
-        self.name = "cpybench handler"
-        return
-    def refresh_current_runs(self):
-        return {"time_total" : [], "time_TplusdT": []}
-    def generate_commandstr(self, n, N):
-        commandstr = ""
-        if (run_preamble is not None):
-            commandstr += f"{run_preamble} "
-        commandstr += f"{run_fname} "
-        commandstr += f"-X {n} "
-        commandstr += f"-Y {n} "
-        commandstr += f"-Z {n} "
-        commandstr += f"1>{tmp_fname} "
-        commandstr += f"2>{stderr_fname}"
-        return commandstr
-    def parse_tmp(self, N, data_dest):
-        f = open(tmp_fname, "r")
-
-        time = -1
-        time_TplusdT = -1
-
-        lines = f.read().split('\n')
-        for i in range(len(lines)):
-            words = lines[i].split()
-            if len(words) == 0:
-                continue
-            try:
-                int(words[0])
-            except ValueError:
-                continue
-            if int(words[0]) == N:
-                for j in range(len(words)):
-                    if words[j] == "Time":
-                        time = float(words[j+1].replace('(',''))
-                        break
-                # next line is the last line
-                words = lines[i+1].split()
-                for j in range(len(words)):
-                    if words[j] == "TplusdT:":
-                        time_TplusdT = float(words[j+1])
-
-                break
-        data_dest["time_total"].append(time)
-        data_dest["time_TplusdT"].append(time_TplusdT)
 
         f.close()
 
@@ -253,13 +204,13 @@ class stream_benchmark_handler:
             if int(words[0]) == iterations:
                 for j in range(len(words)):
                     if words[j] == "Time":
-                        time = float(words[j+1].replace('(',''))
+                        time = pdcutils.float_from_word(words[j+1])
                         break
                 # next line is the last line
                 words = lines[i+1].split()
                 for j in range(len(words)):
                     if words[j] == "stream:":
-                        time_stream = float(words[j+1])
+                        time_stream = pdcutils.float_from_word(words[j+1])
 
                 break
         data_dest["time_total"].append(time)
@@ -396,9 +347,6 @@ if __name__ == "__main__":
     if "heat3d" in run_fname.lower():
         handler = heat3d_handler()
         task = "heat3d"
-    elif "cpybench" in run_fname.lower():
-        handler = cpybench_handler()
-        task = "cpybench"
     elif "stream" in run_fname.lower():
         handler = stream_benchmark_handler()
         task = "stream_benchmark"
@@ -408,10 +356,6 @@ if __name__ == "__main__":
         exit()
 
     manager = run_manager(handler)
-
-
-
-    current_n = range_min
 
     ex_commandstr = manager.generate_commandstr(555,888)
     print(f"example command:")
