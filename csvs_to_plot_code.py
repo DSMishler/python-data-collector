@@ -20,6 +20,7 @@ if __name__ == "__main__":
             csvs.append(item)
 
     vnames = []
+    csvs.sort()
     for csv in csvs:
         first_ = csv.index('_')
         second_ = csv.index('_', first_+1)
