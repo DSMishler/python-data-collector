@@ -7,6 +7,7 @@ import pdcutils
 
 
 target_dir   = "~/Kokkos/kokkos-remote-spaces/weaver_build/examples/benchmarks/stream"
+benchmark    = "stream_1node"
 hostname     = socket.gethostname()
 tmp_fname    = f"mzz_gather_{hostname}.txt"
 pdc_root     = "~/Kokkos/python-data-collector"
@@ -136,14 +137,32 @@ class generator_manager:
             pdcstr = self.generate_pdcstr()
             self.run(pdcstr)
 
+help_message = "no help yet. Good luck chief, you're on your own."
+
+def parse_args(args):
+    global target_dir
+    global benchmark
+    # parse through arguments in c-like fashion
+    i = 1
+    while(i < len(args)):
+        this_arg = args[i].lower()
+        if this_arg in ["help", "-help", "--help", "-h", "--h"]:
+            print(help_message)
+            exit()
+        if this_arg in ["benchmark", "b"]:
+            i += 1
+            benchmark = args[i]
+        elif this_arg in ["target_dir", "td", "target"]:
+            i += 1
+            target_dir = args[i]
+        else:
+            print(f"could not understand argument '{this_arg}'")
+        i += 1
 
 if __name__ == "__main__":
     print(f"begin at {datetime.datetime.now()}")
 
-    benchmark   = "stream_1node"
-    if(len(sys.argv) > 1):
-        if sys.argv[1] == "stream_2node":
-            benchmark   = "stream_2node"
+    parse_args(sys.argv)
 
     pdcutils.generate_run_ns_file(run_ns_fname, 1e5, 1e8, 1.2)
 

@@ -7,6 +7,8 @@ import pdcutils
 
 # TODOs
 # - allow user to choose which handler to use
+# - shall I remove the option to pass iterations to the general handler?
+# - shall I move the run_fname to extra_args instead?
 
 hostname = socket.gethostname()
 
