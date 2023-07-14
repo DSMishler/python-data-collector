@@ -1,6 +1,9 @@
 # vim files
 *.swp
 
+# any slurm, shell, or other bash script
+*.sh
+
 # default python temp files
 mzz_*.txt
 
