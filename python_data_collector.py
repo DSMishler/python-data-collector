@@ -12,19 +12,56 @@ import pdcutils
 
 hostname = socket.gethostname()
 
-# defaults
-error_max    = .01                            # error cutoff of 1%
-run_min      = 2                              # minimum runs per data point
-run_max      = 40                             # maximum runs per point (error)
-range_min    = 10                             # minimum range
-range_max    = 100                            # maximum range
-range_stride = 10                             # run strides
-run_preamble = None                           # preamble for runs, if necessary
-run_fname    = None                           # file to run. required
-run_ns_fname = None                           # file containing the n infos
-output_fname = "mzz_dataout_"+hostname+".csv" # output csv of this program
-tmp_fname    = "mzz_tmp_"+hostname+".txt"     # temp filename for this program
-stderr_fname = "mzz_err_tmp_"+hostname+".txt" # temp filename for program errors
+gpd = {} # global_parameters_dictionary
+gpd["error_max"]     = {"value": 0.1,
+                        "tfunc": float,
+                        "desc" : "error cutoff for each point",
+                        "flags": ["error", "max_error"]}
+gpd["run_min"]       = {"value": 2,
+                        "tfunc": int,
+                        "desc" : "minimum runs for each point",
+                        "flags": ["run_min", "runs", "nruns"]}
+gpd["run_max"]       = {"value": 40,
+                        "tfunc": int,
+                        "desc" : "error out after this many runs on a point",
+                        "flags": ["run_max", "runmax"]}
+gpd["range_min"]     = {"value": 10,
+                        "tfunc": int,
+                        "desc" : "(if no `run_ns_fname`) minimum range",
+                        "flags": ["min", "range_min"]}
+gpd["range_max"]     = {"value": 10,
+                        "tfunc": int,
+                        "desc" : "(if no `run_ns_fname`) maximum range",
+                        "flags": ["max", "range_max"]}
+gpd["range_stride"]  = {"value": 10,
+                        "tfunc": int,
+                        "desc" : "(if no `run_ns_fname`) range stride",
+                        "flags": ["stride", "range_stride"]}
+gpd["run_preamble"]  = {"value": None,
+                        "tfunc": str,
+                        "desc" : "Preamble for runs if needed (e.g. mpirun)",
+                        "flags": ["run_preambe", "pre"]}
+gpd["run_fname"]     = {"value": None,
+                        "tfunc": str,
+                        "desc" : "filename to run",
+                        "flags": ["rfile", "run_fname", "rf"]}
+gpd["run_ns_fname"]  = {"value": None,
+                        "tfunc": str,
+                        "desc" : "file containing desired datapoints",
+                        "flags": ["nfile", "run_ns_fname", "nf"]}
+gpd["output_fname"]  = {"value": "mzz_dataout_"+hostname+".csv",
+                        "tfunc": str,
+                        "desc" : "output csv of this program's collected data",
+                        "flags": ["output_fname", "of", "output"]}
+gpd["tmp_fname"]     = {"value": "mzz_tmp_"+hostname+".csv",
+                        "tfunc": str,
+                        "desc" : "temp filename for the runfile's stdout",
+                        "flags": ["tmp_fname", "tf"]}
+gpd["stderr_fname"]  = {"value": "mzz_err_tmp_"+hostname+".csv",
+                        "tfunc": str,
+                        "desc" : "temp filename for the runfile's stderr",
+                        "flags": ["stderr_fname", "ef"]}
+
 
 help_message = "python data collector. A program designed to make collecting"
 help_message += "data easy and robust in your workflow. Pass any of the"
@@ -34,33 +71,10 @@ help_message += "(e.g. stride 5)."
 
 def print_global_parameters():
     print("global parameters of python data collector")
-    print(f"    error maximum (error)  :  {error_max}")
-    print(f"    minimum nruns (runs)   :  {run_min}")
-    print(f"    maximum nruns (runmax) :  {run_max}")
-    print(f"    range minimum (min)    :  {range_min}")
-    print(f"    range maximum (max)    :  {range_max}")
-    print(f"    range stride  (stride) :  {range_stride}")
-    print(f"    preamble      (pre)    :  {run_preamble}")
-    print(f"    range file    (nfile)  :  {run_ns_fname}")
-    print(f"    file to run   (rf)     :  {run_fname}")
-    print(f"    output file   (of)     :  {output_fname}")
-    print(f"    storage file  (tf)     :  {tmp_fname}")
-    print(f"    stderr file   (ef)     :  {stderr_fname}")
+    for key in gpd:
+        print(f"    {key:13}: {str(gpd[key]['value']):25}# {gpd[key]['desc']}")
 
 def parse_args(args):
-    global error_max
-    global run_min
-    global run_max
-    global range_min
-    global range_max
-    global range_stride
-    global run_preamble
-    global run_ns_fname
-    global run_fname
-    global output_fname
-    global tmp_fname
-    global stderr_fname
-    # parse through arguments in c-like fashion
     i = 1
     while(i < len(args)):
         this_arg = args[i].lower()
@@ -68,52 +82,25 @@ def parse_args(args):
             print(help_message)
             print_global_parameters()
             exit()
-        elif this_arg in ["error", "max_error"]:
-            i += 1
-            error_max = float(args[i])
-        elif this_arg in ["run_min", "runs", "nruns"]:
-            i += 1
-            run_min = int(args[i])
-        elif this_arg in ["run_max", "runmax"]:
-            i += 1
-            run_max = int(args[i])
-        elif this_arg in ["min", "range_min"]:
-            i += 1
-            range_min = int(args[i])
-        elif this_arg in ["max", "range_max"]:
-            i += 1
-            range_max = int(args[i])
-        elif this_arg in ["stride", "range_stride"]:
-            i += 1
-            range_stride = int(args[i])
-        elif this_arg in ["run_preamble", "pre", "preamble"]:
-            i += 1
-            run_preamble = args[i]
-        elif this_arg in ["nfile", "run_ns_fname", "nf"]:
-            i += 1
-            run_ns_fname = args[i]
-        elif this_arg in ["rfile", "run_fname", "rf"]:
-            i += 1
-            run_fname = args[i]
-        elif this_arg in ["output_fname", "of", "output"]:
-            i += 1
-            output_fname = args[i]
-        elif this_arg in ["tmp_fname", "tf"]:
-            i += 1
-            tmp_fname = args[i]
-        elif this_arg in ["stderr_fname", "ef"]:
-            i += 1
-            stderr_fname = args[i]
-        else:
+        # else
+        arg_found = False
+        for key in gpd:
+            if this_arg in gpd[key]["flags"]:
+                type_func = gpd[key]["tfunc"]
+                i += 1
+                gpd[key]["value"] = type_func(args[i])
+                arg_found = True
+                break
+        if arg_found == False:
             print(f"could not understand argument '{this_arg}'")
+
         i += 1
-
-
+            
 def check_global_parameters():
-    if run_fname is None:
+    if gpd["run_fname"]["value"]is None:
         print("ERROR: must have a command to run (rf)")
         return False
-    if range_min > range_max:
+    if gpd["range_min"]["value"]> gpd["range_max"]["value"]:
         print("ERROR: range error")
         return False
     return True
@@ -127,17 +114,17 @@ class heat3d_handler:
         return {"time" : [], "compute_time": [], "dt_time": []}
     def generate_commandstr(self, n, N):
         commandstr = ""
-        if (run_preamble is not None):
-            commandstr += f"{run_preamble} "
-        commandstr += f"{run_fname} "
+        if (gpd['run_preamble']['value'] is not None):
+            commandstr += f"{gpd['run_preamble']['value']} "
+        commandstr += f"{gpd['run_fname']['value']} "
         commandstr += f"-X {n} "
         commandstr += f"-Y {n} "
         commandstr += f"-Z {n} "
-        commandstr += f"1>{tmp_fname} "
-        commandstr += f"2>{stderr_fname}"
+        commandstr += f"1>{gpd['tmp_fname']['value']} "
+        commandstr += f"2>{gpd['stderr_fname']['value']}"
         return commandstr
     def parse_tmp(self, N, data_dest):
-        f = open(tmp_fname, "r")
+        f = open(gpd['tmp_fname']['value'], "r")
 
         time = -1
         dt_time = -1
@@ -180,16 +167,16 @@ class stream_benchmark_handler:
         return {"time_total" : [], "time_stream": []}
     def generate_commandstr(self, n, iterations):
         commandstr = ""
-        if (run_preamble is not None):
-            commandstr += f"{run_preamble} "
-        commandstr += f"{run_fname} "
+        if (gpd['run_preamble']['value'] is not None):
+            commandstr += f"{gpd['run_preamble']['value']} "
+        commandstr += f"{gpd['run_fname']['value']} "
         commandstr += f"-N {n} "
         commandstr += f"-i {iterations} "
-        commandstr += f"1>{tmp_fname} "
-        commandstr += f"2>{stderr_fname}"
+        commandstr += f"1>{gpd['tmp_fname']['value']} "
+        commandstr += f"2>{gpd['stderr_fname']['value']}"
         return commandstr
     def parse_tmp(self, iterations, data_dest):
-        f = open(tmp_fname, "r")
+        f = open(gpd['tmp_fname']['value'], "r")
 
         time = -1
         time_stream = -1
@@ -234,7 +221,7 @@ class run_manager:
     def run_once(self, n, iterations):
         commandstr = self.generate_commandstr(n, iterations)
         os.system(commandstr)
-        f = open(stderr_fname, "r")
+        f = open(gpd['stderr_fname']['value'], "r")
         ftext = f.read()
         if len(ftext) > 0:
             print("        warning: this run completed, but stderr output was nonempty")
@@ -262,20 +249,20 @@ class run_manager:
     def perform_runs_for(self, n, iterations):
         nruns = 0
         self.refresh_current_runs()
-        for i in range(run_min):
+        for i in range(gpd["run_min"]['value']):
             print(f"    run {nruns}")
             self.run_once(n, iterations)
             self.parse_tmp(iterations)
             nruns += 1
         myerror = self.calculate_max_percent_error()
-        while(myerror > error_max):
+        while(myerror > gpd["error_max"]['value']):
             print(f"    run {nruns} (needed because error is currently too"
                   f" high at {myerror*100}%)")
             self.run_once(n, iterations)
             self.parse_tmp(iterations)
             myerror = self.calculate_max_percent_error()
             nruns += 1
-            if (nruns >= run_max):
+            if (nruns >= gpd["run_max"]['value']):
                 print("ERROR: too many runs for this to make sense.")
                 print("(adjust rum_max if you think this was a mistake.)")
                 exit()
@@ -306,7 +293,7 @@ class run_manager:
                     else:
                         print(f"unknown error: possibly triply layered dict?")
         string = string[:-1] + "\n"
-        f = open(output_fname, "w")
+        f = open(gpd["output_fname"]['value'], "w")
         f.write(string)
         f.close()
 
@@ -325,14 +312,14 @@ class run_manager:
                     else:
                         print(f"unknown error: possibly triply layered dict?")
         
-        if not os.path.isfile(output_fname):
+        if not os.path.isfile(gpd["output_fname"]['value']):
             self.write_init(return_dict)
 
         string = ""
         for thing in array:
             string += str(thing) + ","
         string = string[:-1] + "\n"
-        f = open(output_fname, "a")
+        f = open(gpd["output_fname"]['value'], "a")
         f.write(string)
         f.close()
 
@@ -344,12 +331,12 @@ if __name__ == "__main__":
         exit()
 
     # always overwrite old data
-    os.system(f"rm -f {output_fname}")
+    os.system(f"rm -f {gpd['output_fname']['value']}")
 
-    if "heat3d" in run_fname.lower():
+    if "heat3d" in gpd["run_fname"]['value'].lower():
         handler = heat3d_handler()
         task = "heat3d"
-    elif "stream" in run_fname.lower():
+    elif "stream" in gpd["run_fname"]['value'].lower():
         handler = stream_benchmark_handler()
         task = "stream_benchmark"
     else:
@@ -366,13 +353,13 @@ if __name__ == "__main__":
     run_ns = []
 
 
-    if run_ns_fname is None:
-        current_n = range_min
-        while current_n <= range_max:
+    if gpd["run_ns_fname"]['value'] is None:
+        current_n = gpd["range_min"]['value']
+        while current_n <= gpd["range_max"]['value']:
             run_ns.append(current_n)
-            current_n += range_stride
+            current_n += gpd["range_stride"]['value']
     else:
-        f = open(run_ns_fname, "r")
+        f = open(gpd["run_ns_fname"]['value'], "r")
         filewords = re.split(r"[\n, ]", f.read())
         for fileword in filewords:
             if len(fileword) == 0:
@@ -382,9 +369,10 @@ if __name__ == "__main__":
         f.close()
 
     for current_n in run_ns:
-        print(f"task {task} to {output_fname} with n={current_n}")
+        print(f"task {task} to "
+              f"{gpd['output_fname']['value']} with n={current_n}")
         return_dict = manager.perform_runs_for(current_n, 10000)
         manager.write(return_dict)
 
-    os.system(f"rm {tmp_fname}")
-    os.system(f"rm {stderr_fname}")
+    os.system(f"rm {gpd['tmp_fname']['value']}")
+    os.system(f"rm {gpd['stderr_fname']['value']}")

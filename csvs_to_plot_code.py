@@ -4,9 +4,6 @@ import socket
 import re
 
 hostname  = socket.gethostname()
-# tmp_fname = f"mzz_{hostname}_ls.txt"
-
-
 
 if __name__ == "__main__":
     if(len(sys.argv) > 1):
