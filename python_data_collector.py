@@ -229,21 +229,19 @@ if __name__ == "__main__":
         print_global_parameters()
         exit()
 
-    import handler_heat3d
-    import handler_stream
-    import handler_osu
+    import handlers
 
     # always overwrite old data
     os.system(f"rm -f {gpd['output_fname']['value']}")
 
     if "heat3d" in gpd["run_fname"]['value'].lower():
-        handler = handler_heat3d.heat3d_handler(gpd)
+        handler = handlers.handler_heat3d.heat3d_handler(gpd)
         task = "heat3d"
     elif "stream" in gpd["run_fname"]['value'].lower():
-        handler = handler_stream.stream_benchmark_handler(gpd)
+        handler = handlers.handler_stream.stream_benchmark_handler(gpd)
         task = "stream_benchmark"
     elif "osu_bench" in gpd["run_fname"]['value'].lower():
-        handler = handler_osu.osu_benchmark_handler(gpd)
+        handler = handlers.handler_osu.osu_benchmark_handler(gpd)
         task = "osu_benchmark"
     else:
         print(f"ERROR: I don't know what program you're running,"

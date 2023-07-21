@@ -1,7 +1,8 @@
 # pdcutils.py
 # utilities for other python data collection
+import os
 
-# Ugh, no mean and std on weaver, so we will just write the utilities.
+# Ugh, no numpy mean and std on weaver, so we will just write the utilities.
 def mean(data):
     n = len(data)
     msum = 0
@@ -61,3 +62,26 @@ def dtype_from_word(dtype, word):
     for target in remove_chars:
         word = word.replace(target,'')
     return dtype(word)
+
+def generate_plot_code(target):
+    lsitems = os.listdir(target)
+    csvs = []
+    for item in lsitems:
+        if item[-4:] == ".csv":
+            csvs.append(item)
+
+    vnames = []
+    csvs.sort()
+    for csv in csvs:
+        first_ = csv.index('_')
+        second_ = csv.index('_', first_+1)
+        vname = csv[second_+1:-4]
+        vnames.append(vname)
+        printstr = ""
+        printstr += f"{vname} = pd.read_csv"
+        printstr += f"(\"{csv}\")"
+        print(printstr)
+
+    print(f"dfs = {vnames}".replace("'",""))
+    print(f"labels = {vnames}".replace("'", "\""))
+

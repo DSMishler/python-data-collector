@@ -10,3 +10,4 @@ mzz_*.txt
 # data directories, pychache
 *data/
 __pycache__/
+*.csv
