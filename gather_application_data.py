@@ -6,8 +6,8 @@ import datetime
 import pdcutils
 
 
-target_dir   = "~/Kokkos/kokkos-remote-spaces/weaver_build/examples/benchmarks/stream"
-benchmark    = "stream_1node"
+target_dir   = None
+benchmark    = None
 hostname     = socket.gethostname()
 tmp_fname    = f"mzz_gather_{hostname}.txt"
 pdc_root     = "~/Kokkos/python-data-collector"
@@ -104,6 +104,42 @@ class stream_2node_generator:
         self.out_fname = of
         self.run_fname = rf
 
+class osu_bench_generator:
+    def __init__(self):
+        self.name        = "osu_bench_generator"
+        self.target_file = "osu_bench"
+        self.data_dir    = "osu_bench_data"
+        self.out_fname   = None
+        self.run_fname   = None
+        self.pre         = "mpirun -np 2"
+    def mode_to_label(self, mode):
+        if(mode == 4):
+            return "put"
+        if(mode == 5):
+            return "get"
+        return None
+    def generate_param_dict_list(self):
+        param_dict_list = []
+        modes = [4,5]
+        for mode in modes:
+            param_dict_list.append({"mode": mode})
+        return param_dict_list
+    def set_vals(self, param_dict):
+        mode = param_dict["mode"]
+        of = "" #output file
+        of += f"{self.data_dir}/"
+        of += f"{today}_"
+        of += f"{hostname}_"
+        of += "osu_bench_"
+        of += "np2_"
+        of += f"{self.mode_to_label(mode)}"
+        of += ".csv"
+
+        rf= f"{target_dir}/{self.target_file} -m {mode}"
+
+        self.out_fname = of
+        self.run_fname = rf
+
 
 
 class generator_manager:
@@ -171,6 +207,9 @@ if __name__ == "__main__":
         manager.all_runs()
     elif benchmark == "stream_2node":
         manager = generator_manager(stream_2node_generator)
+        manager.all_runs()
+    elif benchmark == "osu_bench":
+        manager = generator_manager(osu_bench_generator)
         manager.all_runs()
     else:
         print(f"did not understand benchmark {benchmark}")

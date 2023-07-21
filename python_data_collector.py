@@ -106,107 +106,6 @@ def check_global_parameters():
     return True
 
 
-class heat3d_handler:
-    def __init__(self):
-        self.name = "head3d handler"
-        return
-    def refresh_current_runs(self):
-        return {"time" : [], "compute_time": [], "dt_time": []}
-    def generate_commandstr(self, n, N):
-        commandstr = ""
-        if (gpd['run_preamble']['value'] is not None):
-            commandstr += f"{gpd['run_preamble']['value']} "
-        commandstr += f"{gpd['run_fname']['value']} "
-        commandstr += f"-X {n} "
-        commandstr += f"-Y {n} "
-        commandstr += f"-Z {n} "
-        commandstr += f"1>{gpd['tmp_fname']['value']} "
-        commandstr += f"2>{gpd['stderr_fname']['value']}"
-        return commandstr
-    def parse_tmp(self, N, data_dest):
-        f = open(gpd['tmp_fname']['value'], "r")
-
-        time = -1
-        dt_time = -1
-        compute_time = -1
-
-        lines = f.read().split('\n')
-        for i in range(len(lines)):
-            words = lines[i].split()
-            if len(words) == 0:
-                continue
-            try:
-                int(words[0])
-            except ValueError:
-                continue
-            if int(words[0]) == N:
-                for j in range(len(words)):
-                    if words[j] == "Time":
-                        time = pdcutils.float_from_word(words[j+1])
-                        break
-                # next line is the last line
-                words = lines[i+1].split()
-                for j in range(len(words)):
-                    if words[j] == "surface:":
-                        dt_time = pdcutils.float_from_word(words[j+1])
-                    if words[j] == "compute:":
-                        compute_time = pdcutils.float_from_word(words[j+1])
-
-                break
-        data_dest["time"].append(time)
-        data_dest["compute_time"].append(compute_time)
-        data_dest["dt_time"].append(dt_time)
-
-        f.close()
-
-class stream_benchmark_handler:
-    def __init__(self):
-        self.name = "stream benchmark handler"
-        return
-    def refresh_current_runs(self):
-        return {"time_total" : [], "time_stream": []}
-    def generate_commandstr(self, n, iterations):
-        commandstr = ""
-        if (gpd['run_preamble']['value'] is not None):
-            commandstr += f"{gpd['run_preamble']['value']} "
-        commandstr += f"{gpd['run_fname']['value']} "
-        commandstr += f"-N {n} "
-        commandstr += f"-i {iterations} "
-        commandstr += f"1>{gpd['tmp_fname']['value']} "
-        commandstr += f"2>{gpd['stderr_fname']['value']}"
-        return commandstr
-    def parse_tmp(self, iterations, data_dest):
-        f = open(gpd['tmp_fname']['value'], "r")
-
-        time = -1
-        time_stream = -1
-
-        lines = f.read().split('\n')
-        for i in range(len(lines)):
-            words = lines[i].split()
-            if len(words) == 0:
-                continue
-            try:
-                int(words[0])
-            except ValueError:
-                continue
-            if int(words[0]) == iterations:
-                for j in range(len(words)):
-                    if words[j] == "Time":
-                        time = pdcutils.float_from_word(words[j+1])
-                        break
-                # next line is the last line
-                words = lines[i+1].split()
-                for j in range(len(words)):
-                    if words[j] == "stream:":
-                        time_stream = pdcutils.float_from_word(words[j+1])
-
-                break
-        data_dest["time_total"].append(time)
-        data_dest["time_stream"].append(time_stream)
-
-        f.close()
-
 class run_manager:
     def __init__(self, handler):
         self.handler = handler
@@ -330,15 +229,22 @@ if __name__ == "__main__":
         print_global_parameters()
         exit()
 
+    import handler_heat3d
+    import handler_stream
+    import handler_osu
+
     # always overwrite old data
     os.system(f"rm -f {gpd['output_fname']['value']}")
 
     if "heat3d" in gpd["run_fname"]['value'].lower():
-        handler = heat3d_handler()
+        handler = handler_heat3d.heat3d_handler(gpd)
         task = "heat3d"
     elif "stream" in gpd["run_fname"]['value'].lower():
-        handler = stream_benchmark_handler()
+        handler = handler_stream.stream_benchmark_handler(gpd)
         task = "stream_benchmark"
+    elif "osu_bench" in gpd["run_fname"]['value'].lower():
+        handler = handler_osu.osu_benchmark_handler(gpd)
+        task = "osu_benchmark"
     else:
         print(f"ERROR: I don't know what program you're running,"
               f" so I don't know what handler to use.")
@@ -371,7 +277,7 @@ if __name__ == "__main__":
     for current_n in run_ns:
         print(f"task {task} to "
               f"{gpd['output_fname']['value']} with n={current_n}")
-        return_dict = manager.perform_runs_for(current_n, 10000)
+        return_dict = manager.perform_runs_for(current_n, 1000)
         manager.write(return_dict)
 
     os.system(f"rm {gpd['tmp_fname']['value']}")
