@@ -16,135 +16,9 @@ run_ns_fname = f"mzz_run_ns_{hostname}.txt"
 today        = str(datetime.date.today())
 
 
-class stream_1node_generator:
-    def __init__(self):
-        self.name        = "stream_1node_generator"
-        self.target_file = "stream_1node"
-        self.data_dir    = "stream_1node_data"
-        self.out_fname   = None
-        self.run_fname   = None
-        self.pre         = ""
-    def mode_to_char(self, mode):
-        if(mode == 0):
-            return "n"
-        if(mode == 1):
-            return "r"
-        if(mode == 2):
-            return "u"
-        return None
-    def bmode_to_style(self, mode):
-        if(mode == -1):
-            return "pp"
-        else:
-            return "pe"
-    def generate_param_dict_list(self):
-        param_dict_list = []
-        amodes = [0,1,2]
-        bmodes = [-1,0,1,2]
-        for amode in amodes:
-            for bmode in bmodes:
-                param_dict_list.append({"amode": amode, "bmode": bmode})
-        return param_dict_list
-    def set_vals(self, param_dict):
-        amode = param_dict["amode"]
-        bmode = param_dict["bmode"]
-        of = "" #output file
-        of += f"{self.data_dir}/"
-        of += f"{today}_"
-        of += f"{hostname}_"
-        of += "stream_"
-        of += "np1_"
-        of += f"{self.bmode_to_style(bmode)}_"
-        of += f"{self.mode_to_char(amode)}"
-        of += "p"
-        if bmode == -1:
-            of += f"{self.mode_to_char(amode)}"
-        else:
-            of += f"{self.mode_to_char(bmode)}"
-        of += ".csv"
-
-        rf= f"{target_dir}/{self.target_file} -a {amode} -b {bmode}"
-
-        self.out_fname = of
-        self.run_fname = rf
-
-class stream_2node_generator:
-    def __init__(self):
-        self.name        = "stream_2node_generator"
-        self.target_file = "stream_2node"
-        self.data_dir    = "stream_2node_data"
-        self.out_fname   = None
-        self.run_fname   = None
-        self.pre         = "mpirun -np 2"
-    def mode_to_label(self, mode):
-        if(mode == 0):
-            return "mpi"
-        if(mode == 1):
-            return "rma"
-        return None
-    def generate_param_dict_list(self):
-        param_dict_list = []
-        modes = [0,1]
-        for mode in modes:
-            param_dict_list.append({"mode": mode})
-        return param_dict_list
-    def set_vals(self, param_dict):
-        mode = param_dict["mode"]
-        of = "" #output file
-        of += f"{self.data_dir}/"
-        of += f"{today}_"
-        of += f"{hostname}_"
-        of += "stream_"
-        of += "np2_"
-        of += f"{self.mode_to_label(mode)}"
-        of += ".csv"
-
-        rf= f"{target_dir}/{self.target_file} -m {mode}"
-
-        self.out_fname = of
-        self.run_fname = rf
-
-class osu_bench_generator:
-    def __init__(self):
-        self.name        = "osu_bench_generator"
-        self.target_file = "osu_bench"
-        self.data_dir    = "osu_bench_data"
-        self.out_fname   = None
-        self.run_fname   = None
-        self.pre         = "mpirun -np 2"
-    def mode_to_label(self, mode):
-        if(mode == 4):
-            return "put"
-        if(mode == 5):
-            return "get"
-        return None
-    def generate_param_dict_list(self):
-        param_dict_list = []
-        modes = [4,5]
-        for mode in modes:
-            param_dict_list.append({"mode": mode})
-        return param_dict_list
-    def set_vals(self, param_dict):
-        mode = param_dict["mode"]
-        of = "" #output file
-        of += f"{self.data_dir}/"
-        of += f"{today}_"
-        of += f"{hostname}_"
-        of += "osu_bench_"
-        of += "np2_"
-        of += f"{self.mode_to_label(mode)}"
-        of += ".csv"
-
-        rf= f"{target_dir}/{self.target_file} -m {mode}"
-
-        self.out_fname = of
-        self.run_fname = rf
-
-
-
 class generator_manager:
     def __init__(self, subclass):
-        self.generator = subclass()
+        self.generator = subclass(today, hostname, target_dir)
     def generate_pdcstr(self):
         pdcstr = ""
         pdcstr += pdc_cmd
@@ -201,18 +75,19 @@ if __name__ == "__main__":
     parse_args(sys.argv)
 
     pdcutils.generate_run_ns_file(run_ns_fname, 1e5, 4e8, 1.2)
+    
+    import generators
 
     if benchmark == "stream_1node":
-        manager = generator_manager(stream_1node_generator)
-        manager.all_runs()
+        manager = generator_manager(generators.generator_stream_1node.stream_1node_generator)
     elif benchmark == "stream_2node":
-        manager = generator_manager(stream_2node_generator)
-        manager.all_runs()
+        manager = generator_manager(generators.generator_stream_2node.stream_2node_generator)
     elif benchmark == "osu_bench":
-        manager = generator_manager(osu_bench_generator)
-        manager.all_runs()
+        manager = generator_manager(generators.generator_osu_bench.osu_bench_generator)
     else:
         print(f"did not understand benchmark {benchmark}")
+        exit()
+    manager.all_runs()
 
     os.system(f"rm -f {run_ns_fname}")
 

@@ -15,11 +15,11 @@ class heat3d_handler:
         commandstr += f"-X {n} "
         commandstr += f"-Y {n} "
         commandstr += f"-Z {n} "
-        commandstr += f"1>{self.infodict['tmp_fname']['value']} "
+        commandstr += f"1>{self.infodict['stdout_fname']['value']} "
         commandstr += f"2>{self.infodict['stderr_fname']['value']}"
         return commandstr
     def parse_tmp(self, N, data_dest):
-        f = open(self.infodict['tmp_fname']['value'], "r")
+        f = open(self.infodict['stdout_fname']['value'], "r")
 
         time = -1
         dt_time = -1
