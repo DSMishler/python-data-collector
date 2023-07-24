@@ -200,7 +200,7 @@ if __name__ == "__main__":
 
     parse_args(sys.argv)
 
-    pdcutils.generate_run_ns_file(run_ns_fname, 1e5, 1e9, 1.2)
+    pdcutils.generate_run_ns_file(run_ns_fname, 1e5, 4e8, 1.2)
 
     if benchmark == "stream_1node":
         manager = generator_manager(stream_1node_generator)
@@ -218,4 +218,4 @@ if __name__ == "__main__":
 
     print(f"ended at {datetime.datetime.now()}")
 
-    pdc.generate_plot_code(manager.generator.data_dir)
+    pdcutils.generate_plot_code(manager.generator.data_dir)

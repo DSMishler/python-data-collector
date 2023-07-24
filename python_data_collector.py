@@ -53,11 +53,11 @@ gpd["output_fname"]  = {"value": "mzz_dataout_"+hostname+".csv",
                         "tfunc": str,
                         "desc" : "output csv of this program's collected data",
                         "flags": ["output_fname", "of", "output"]}
-gpd["tmp_fname"]     = {"value": "mzz_tmp_"+hostname+".csv",
+gpd["stdout_fname"]  = {"value": "mzz_tmp_"+hostname+".txt",
                         "tfunc": str,
                         "desc" : "temp filename for the runfile's stdout",
-                        "flags": ["tmp_fname", "tf"]}
-gpd["stderr_fname"]  = {"value": "mzz_err_tmp_"+hostname+".csv",
+                        "flags": ["stdout_fname", "tf"]}
+gpd["stderr_fname"]  = {"value": "mzz_err_tmp_"+hostname+".txt",
                         "tfunc": str,
                         "desc" : "temp filename for the runfile's stderr",
                         "flags": ["stderr_fname", "ef"]}
@@ -278,5 +278,5 @@ if __name__ == "__main__":
         return_dict = manager.perform_runs_for(current_n, 1000)
         manager.write(return_dict)
 
-    os.system(f"rm {gpd['tmp_fname']['value']}")
+    os.system(f"rm {gpd['stdout_fname']['value']}")
     os.system(f"rm {gpd['stderr_fname']['value']}")
