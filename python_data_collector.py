@@ -243,6 +243,9 @@ if __name__ == "__main__":
     elif "osu_bench" in gpd["run_fname"]['value'].lower():
         handler = handlers.handler_osu.osu_benchmark_handler(gpd)
         task = "osu_benchmark"
+    elif "teams" in gpd["run_fname"]['value'].lower():
+        handler = handlers.handler_teams.teams_benchmark_handler(gpd)
+        task = "teams_benchmark"
     else:
         print(f"ERROR: I don't know what program you're running,"
               f" so I don't know what handler to use.")

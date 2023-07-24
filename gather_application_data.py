@@ -84,6 +84,8 @@ if __name__ == "__main__":
         manager = generator_manager(generators.generator_stream_2node.stream_2node_generator)
     elif benchmark == "osu_bench":
         manager = generator_manager(generators.generator_osu_bench.osu_bench_generator)
+    elif benchmark == "teams_bench":
+        manager = generator_manager(generators.generator_teams.teams_bench_generator)
     else:
         print(f"did not understand benchmark {benchmark}")
         exit()

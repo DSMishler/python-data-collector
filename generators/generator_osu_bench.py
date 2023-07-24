@@ -1,5 +1,3 @@
-import datetime
-
 class osu_bench_generator:
     def __init__(self, today, hostname, target_dir):
         self.name        = "osu_bench_generator"

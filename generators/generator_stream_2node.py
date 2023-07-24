@@ -1,5 +1,3 @@
-import datetime
-
 class stream_2node_generator:
     def __init__(self, today, hostname, target_dir):
         self.name        = "stream_2node_generator"
