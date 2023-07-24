@@ -20,8 +20,8 @@ class teams_bench_generator:
     def generate_param_dict_list(self):
         param_dict_list = []
         modes = [0,1,2]
-        team_sizes = [2,4,8,16,32,64,128]
-        league_sizes = [2,4,8,16,32,64,128]
+        team_sizes = [8, 16, 32, 64, 128, 256, 512]
+        league_sizes = [8, 16, 32, 64, 128, 256, 512]
         for mode in modes:
             for ts in team_sizes:
                 for ls in league_sizes:
@@ -38,8 +38,8 @@ class teams_bench_generator:
         of += "teams_bench_"
         of += "np1_"
         of += f"{self.mode_to_label(mode)}_"
-        of += f"TS{ts}_"
-        of += f"LS{ls}"
+        of += f"TS{ts:03d}_"
+        of += f"LS{ls:03d}"
         of += ".csv"
 
         rf= f"{self.target_dir}/{self.target_file} -m {mode} -TS {ts} -LS {ls}"

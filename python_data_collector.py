@@ -229,6 +229,7 @@ if __name__ == "__main__":
         print_global_parameters()
         exit()
 
+
     import handlers
 
     # always overwrite old data
@@ -275,10 +276,11 @@ if __name__ == "__main__":
             run_ns.append(int(fileword))
         f.close()
 
+    iterations = 5
     for current_n in run_ns:
         print(f"task {task} to "
               f"{gpd['output_fname']['value']} with n={current_n}")
-        return_dict = manager.perform_runs_for(current_n, 1000)
+        return_dict = manager.perform_runs_for(current_n, iterations)
         manager.write(return_dict)
 
     os.system(f"rm {gpd['stdout_fname']['value']}")
