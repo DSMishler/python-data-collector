@@ -6,4 +6,4 @@ if __name__ == "__main__":
         target = sys.argv[1]
     else:
         target = "."
-    pdcutils.generate_plot_code(target)
+    pdcutils.generate_plot_code_dict(target)

@@ -95,4 +95,4 @@ if __name__ == "__main__":
 
     print(f"ended at {datetime.datetime.now()}")
 
-    pdcutils.generate_plot_code(manager.generator.data_dir)
+    pdcutils.generate_plot_code_dict(manager.generator.data_dir)

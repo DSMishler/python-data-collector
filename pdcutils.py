@@ -85,3 +85,26 @@ def generate_plot_code(target):
     print(f"dfs = {vnames}".replace("'",""))
     print(f"labels = {vnames}".replace("'", "\""))
 
+def generate_plot_code_dict(target):
+    lsitems = os.listdir(target)
+    csvs = []
+    for item in lsitems:
+        if item[-4:] == ".csv":
+            csvs.append(item)
+
+    vnames = []
+    csvs.sort()
+    print("runs = {}")
+    for csv in csvs:
+        first_ = csv.index('_')
+        second_ = csv.index('_', first_+1)
+        vname = csv[second_+1:-4]
+        vnames.append(vname)
+        printstr = ""
+        printstr += f"runs[\"{vname}\"] = "
+        printstr += "{"
+        printstr += f"\"data\" : pd.read_csv(\"{csv}\")"
+        printstr += ", "
+        printstr += f"\"label\" : \"{vname}\""
+        printstr += "}"
+        print(printstr)
