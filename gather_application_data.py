@@ -98,5 +98,3 @@ if __name__ == "__main__":
     os.system(f"rm -f {run_ps_fname}")
 
     print(f"ended at {datetime.datetime.now()}")
-
-    # pdcutils.generate_plot_code_dict(manager.generator.data_dir)

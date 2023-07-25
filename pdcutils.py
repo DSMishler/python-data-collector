@@ -121,7 +121,6 @@ def generate_plot_code_dict(target):
         printstr += "}"
         print(printstr)
 
-
 def count_permutations(src_dict):
     total_permutations = 1
     for key in src_dict:
