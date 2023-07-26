@@ -17,36 +17,34 @@ class teams_bench_generator:
         if(mode == 2):
             return "uview"
         return None
-    def generate_param_dict_list(self):
-        param_dict_list = []
-        modes = [0,1,2]
-        team_sizes = [8, 16, 32, 64, 128, 256, 512]
-        league_sizes = [8, 16, 32, 64, 128, 256, 512]
-        for mode in modes:
-            for ts in team_sizes:
-                for ls in league_sizes:
-                    if mode == 0:
-                        continue
-                    if mode == 1 and ts in [8,16,32]:
-                        continue
-                    param_dict_list.append({"mode": mode, "ts": ts, "ls": ls})
-        return param_dict_list
+    def generate_params_dict(self, lens = [1000, 2000], modes = [0, 1], iters = [5], TSs = [64], LSs = [64]):
+        param_dict = {}
+        param_dict["len"]={}
+        param_dict["mode"]={}
+        param_dict["team_size"] = {}
+        param_dict["league_size"] = {}
+        param_dict["iterations"]={}
+        param_dict["len"]["flag"] = "-N"
+        param_dict["mode"]["flag"] = "-M"
+        param_dict["team_size"]["flag"] = "-TS"
+        param_dict["league_size"]["flag"] = "-LS"
+        param_dict["iterations"]["flag"] = "-I"
+        param_dict["len"]["values"] = lens
+        param_dict["mode"]["values"] = modes
+        param_dict["team_size"]["values"] = TSs
+        param_dict["league_size"]["values"] = LSs
+        param_dict["iterations"]["values"] = iters
+        return param_dict
     def set_vals(self, param_dict):
-        mode = param_dict["mode"]
-        ts = param_dict["ts"]
-        ls = param_dict["ls"]
         of = "" #output file
         of += f"{self.data_dir}/"
         of += f"{self.today}_"
         of += f"{self.hostname}_"
         of += "teams_bench_"
-        of += "np1_"
-        of += f"{self.mode_to_label(mode)}_"
-        of += f"TS{ts:03d}_"
-        of += f"LS{ls:03d}"
+        of += "np1"
         of += ".csv"
 
-        rf= f"{self.target_dir}/{self.target_file} -m {mode} -TS {ts} -LS {ls}"
+        rf= f"{self.target_dir}/{self.target_file}"
 
         self.out_fname = of
         self.run_fname = rf

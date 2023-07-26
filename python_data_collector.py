@@ -160,13 +160,13 @@ class run_manager:
         nruns = 0
         self.refresh_current_runs()
         for i in range(gpd["run_min"]['value']):
-            print(f"    run {nruns}")
+            print(f"        run {nruns}")
             self.run_once(param_dict)
             self.parse_tmp(param_dict)
             nruns += 1
         myerror = self.calculate_max_percent_error()
         while(myerror > gpd["error_max"]['value']):
-            print(f"    run {nruns} (needed because error is currently too"
+            print(f"        run {nruns} (needed because error is currently too"
                   f" high at {myerror*100}%)")
             self.run_once(n, param_dict)
             self.parse_tmp(param_dict)
@@ -280,8 +280,10 @@ if __name__ == "__main__":
     
     for i in range(pdcutils.count_permutations(params_dict)):
         param_dict = pdcutils.get_nth_dict(params_dict, i)
-        print(f"task {task} to "
-              f"{gpd['output_fname']['value']} with params={param_dict}")
+        print(f"task {task} to {gpd['output_fname']['value']} with params:")
+        for key in param_dict:
+            print(f"    {key}: {param_dict[key]['value']}")
+
         return_dict = manager.perform_runs_for(param_dict)
         manager.write(return_dict)
 
