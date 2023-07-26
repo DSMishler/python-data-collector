@@ -46,6 +46,15 @@ def generate_log_scale_stepped_array(nmin, nmax, nmul):
     return_arr.append(int(nmax))
     return return_arr
 
+def generate_log_scale_array(nmin, nmax, nmul):
+    return_arr = []
+    ncur = nmin
+    while(ncur < nmax):
+        return_arr.append(int(ncur))
+        ncur *= nmul
+    return_arr.append(int(nmax))
+    return return_arr
+
 def generate_run_ns_file(fname, nmin, nmax, nmul, mode="log_stepped"):
     f = open(fname, "w")
 
