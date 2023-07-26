@@ -46,12 +46,15 @@ def generate_log_scale_stepped_array(nmin, nmax, nmul):
     return_arr.append(int(nmax))
     return return_arr
 
-def generate_run_ns_file(fname, nmin, nmax, nmul):
+def generate_run_ns_file(fname, nmin, nmax, nmul, mode="log_stepped"):
     f = open(fname, "w")
 
-    log_arr = generate_log_scale_stepped_array(nmin, nmax, nmul)
+    if mode == "log_stepped":
+        arr = generate_log_scale_stepped_array(nmin, nmax, nmul)
+    else:
+        arr = None
 
-    for element in log_arr:
+    for element in arr:
         f.write(str(element))
         f.write("\n")
 

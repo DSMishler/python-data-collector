@@ -7,17 +7,7 @@ class stream_benchmark_handler:
         return
     def refresh_current_runs(self):
         return {"time_total" : [], "time_stream": []}
-    def generate_commandstr(self, n, iterations):
-        commandstr = ""
-        if (self.infodict['run_preamble']['value'] is not None):
-            commandstr += f"{self.infodict['run_preamble']['value']} "
-        commandstr += f"{self.infodict['run_fname']['value']} "
-        commandstr += f"-N {n} "
-        commandstr += f"-i {iterations} "
-        commandstr += f"1>{self.infodict['stdout_fname']['value']} "
-        commandstr += f"2>{self.infodict['stderr_fname']['value']}"
-        return commandstr
-    def parse_tmp(self, iterations, data_dest):
+    def parse_tmp(self, param_dict, data_dest):
         f = open(self.infodict['stdout_fname']['value'], "r")
 
         time = -1

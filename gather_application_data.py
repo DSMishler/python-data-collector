@@ -3,6 +3,7 @@ import os
 import socket
 import re
 import datetime
+import pickle
 import pdcutils
 
 
@@ -12,7 +13,7 @@ hostname     = socket.gethostname()
 tmp_fname    = f"mzz_gather_{hostname}.txt"
 pdc_root     = "~/Kokkos/python-data-collector"
 pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
-run_ns_fname = f"mzz_run_ns_{hostname}.txt"
+run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
 
 
@@ -27,7 +28,7 @@ class generator_manager:
         pdcstr += " "
         pdcstr += f"rf \"{self.generator.run_fname}\""
         pdcstr += " "
-        pdcstr += f"nf {run_ns_fname}"
+        pdcstr += f"pf {run_ps_fname}"
         pdcstr += " "
         pdcstr += f"of {self.generator.out_fname}"
         pdcstr += " "
@@ -41,11 +42,14 @@ class generator_manager:
             exit()
     def all_runs(self):
         os.system(f"mkdir -p {self.generator.data_dir}")
-        param_dict_list = self.generator.generate_param_dict_list()
-        for param_dict in param_dict_list:
-            self.generator.set_vals(param_dict)
-            pdcstr = self.generate_pdcstr()
-            self.run(pdcstr)
+        params_dict = self.generator.generate_params_dict()
+        f = open(run_ps_fname, "wb")
+        pickle.dump(params_dict, f)
+        f.close()
+
+        self.generator.set_vals(params_dict)
+        pdcstr = self.generate_pdcstr()
+        self.run(pdcstr)
 
 help_message = "no help yet. Good luck chief, you're on your own."
 
@@ -74,7 +78,7 @@ if __name__ == "__main__":
 
     parse_args(sys.argv)
 
-    pdcutils.generate_run_ns_file(run_ns_fname, 1e5, 4e8, 1.2)
+    # pdcutils.generate_run_ps_file(run_np_fname, 1e5, 4e8, 1.2)
     
     import generators
 
@@ -91,7 +95,7 @@ if __name__ == "__main__":
         exit()
     manager.all_runs()
 
-    os.system(f"rm -f {run_ns_fname}")
+    os.system(f"rm -f {run_ps_fname}")
 
     print(f"ended at {datetime.datetime.now()}")
 

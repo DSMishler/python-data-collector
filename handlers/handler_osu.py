@@ -7,17 +7,7 @@ class osu_benchmark_handler:
         return
     def refresh_current_runs(self):
         return {"time_benchmark": [], "time_latency": [], "message_rate": []}
-    def generate_commandstr(self, n, iterations):
-        commandstr = ""
-        if (self.infodict['run_preamble']['value'] is not None):
-            commandstr += f"{self.infodict['run_preamble']['value']} "
-        commandstr += f"{self.infodict['run_fname']['value']} "
-        commandstr += f"-l {n} "
-        commandstr += f"-i {iterations} "
-        commandstr += f"1>{self.infodict['stdout_fname']['value']} "
-        commandstr += f"2>{self.infodict['stderr_fname']['value']}"
-        return commandstr
-    def parse_tmp(self, iterations, data_dest):
+    def parse_tmp(self, param_dict, data_dest):
         f = open(self.infodict['stdout_fname']['value'], "r")
 
         time_benchmark = -1
@@ -43,7 +33,7 @@ class osu_benchmark_handler:
                     time_latency = pdcutils.dtype_from_word(float, words[j+1])
                 if words[j] == "time:":
                     time_benchmark = pdcutils.dtype_from_word(float, words[j+1])
-                if words[j] == "rate:":
+                if words[j] == "bandwidth:":
                     message_rate = pdcutils.dtype_from_word(float, words[j+1])
 
         data_dest["time_benchmark"].append(time_benchmark)
