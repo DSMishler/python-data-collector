@@ -2,6 +2,7 @@ import sys
 import os
 import socket
 import re
+import pickle
 import pdcutils
 
 
@@ -27,15 +28,15 @@ gpd["run_max"]       = {"value": 40,
                         "flags": ["run_max", "runmax"]}
 gpd["range_min"]     = {"value": 10,
                         "tfunc": int,
-                        "desc" : "(if no `run_ns_fname`) minimum range",
+                        "desc" : "(if no `run_dim_fname`) minimum range",
                         "flags": ["min", "range_min"]}
 gpd["range_max"]     = {"value": 10,
                         "tfunc": int,
-                        "desc" : "(if no `run_ns_fname`) maximum range",
+                        "desc" : "(if no `run_dim_fname`) maximum range",
                         "flags": ["max", "range_max"]}
 gpd["range_stride"]  = {"value": 10,
                         "tfunc": int,
-                        "desc" : "(if no `run_ns_fname`) range stride",
+                        "desc" : "(if no `run_dim_fname`) range stride",
                         "flags": ["stride", "range_stride"]}
 gpd["run_preamble"]  = {"value": None,
                         "tfunc": str,
@@ -45,10 +46,10 @@ gpd["run_fname"]     = {"value": None,
                         "tfunc": str,
                         "desc" : "filename to run",
                         "flags": ["rfile", "run_fname", "rf"]}
-gpd["run_ns_fname"]  = {"value": None,
+gpd["run_dim_fname"] = {"value": None,
                         "tfunc": str,
-                        "desc" : "file containing desired datapoints",
-                        "flags": ["nfile", "run_ns_fname", "nf"]}
+                        "desc" : "pickle file containing desired datapoints",
+                        "flags": ["pfile", "run_dim_fname", "pf"]}
 gpd["output_fname"]  = {"value": "mzz_dataout_"+hostname+".csv",
                         "tfunc": str,
                         "desc" : "output csv of this program's collected data",
@@ -115,19 +116,29 @@ class run_manager:
         return
     def refresh_current_runs(self):
         self.current_runs = handler.refresh_current_runs()
-    def generate_commandstr(self, n, iterations):
-        return handler.generate_commandstr(n, iterations)
-    def run_once(self, n, iterations):
-        commandstr = self.generate_commandstr(n, iterations)
+    def generate_commandstr(self, param_dict):
+        commandstr = ""
+        if (gpd['run_preamble']['value'] is not None):
+            commandstr += f"{gpd['run_preamble']['value']} "
+        commandstr += f"{gpd['run_fname']['value']} "
+        for key in param_dict:
+            val = param_dict[key]["value"]
+            flag = param_dict[key]["flag"]
+            commandstr += f"{flag} {val} "
+        commandstr += f"1>{gpd['stdout_fname']['value']} "
+        commandstr += f"2>{gpd['stderr_fname']['value']}"
+        return commandstr
+    def run_once(self, paramdict):
+        commandstr = self.generate_commandstr(paramdict)
         os.system(commandstr)
         f = open(gpd['stderr_fname']['value'], "r")
         ftext = f.read()
         if len(ftext) > 0:
-            print("        warning: this run completed, but stderr output was nonempty")
+            print("        warning: this run completed, but stderr output was not empty")
             print(ftext)
         f.close()
-    def parse_tmp(self, iterations):
-        handler.parse_tmp(iterations, self.current_runs)
+    def parse_tmp(self, param_dict):
+        handler.parse_tmp(param_dict, self.current_runs)
         for key in self.current_runs:
             for element in self.current_runs[key]:
                 if element < 0:
@@ -145,29 +156,31 @@ class run_manager:
                 max_error = myerror
         return max_error
 
-    def perform_runs_for(self, n, iterations):
+    def perform_runs_for(self, param_dict):
         nruns = 0
         self.refresh_current_runs()
         for i in range(gpd["run_min"]['value']):
-            print(f"    run {nruns}")
-            self.run_once(n, iterations)
-            self.parse_tmp(iterations)
+            print(f"        run {nruns}")
+            self.run_once(param_dict)
+            self.parse_tmp(param_dict)
             nruns += 1
         myerror = self.calculate_max_percent_error()
         while(myerror > gpd["error_max"]['value']):
-            print(f"    run {nruns} (needed because error is currently too"
+            print(f"        run {nruns} (needed because error is currently too"
                   f" high at {myerror*100}%)")
-            self.run_once(n, iterations)
-            self.parse_tmp(iterations)
+            self.run_once(n, param_dict)
+            self.parse_tmp(param_dict)
             myerror = self.calculate_max_percent_error()
             nruns += 1
             if (nruns >= gpd["run_max"]['value']):
                 print("ERROR: too many runs for this to make sense.")
                 print("(adjust rum_max if you think this was a mistake.)")
                 exit()
-        return_dict = {"n" : n}
-        return_dict["iterations"] = iterations
-        return_dict["nruns"] = nruns
+
+        return_dict = {"nruns": nruns}
+
+        for key in param_dict:
+            return_dict[key] = param_dict[key]["value"]
 
         for attr in self.current_runs:
             attr_mean = pdcutils.mean(self.current_runs[attr])
@@ -252,35 +265,26 @@ if __name__ == "__main__":
               f" so I don't know what handler to use.")
         exit()
 
-    manager = run_manager(handler)
-
-    ex_commandstr = manager.generate_commandstr(555,888)
-    print(f"example command:")
-    print(f"```{ex_commandstr}```")
-
-    run_ns = []
-
-
-    if gpd["run_ns_fname"]['value'] is None:
-        current_n = gpd["range_min"]['value']
-        while current_n <= gpd["range_max"]['value']:
-            run_ns.append(current_n)
-            current_n += gpd["range_stride"]['value']
+    if gpd["run_dim_fname"]['value'] is None:
+        print("you need a run dimension file!")
+        exit()
     else:
-        f = open(gpd["run_ns_fname"]['value'], "r")
-        filewords = re.split(r"[\n, ]", f.read())
-        for fileword in filewords:
-            if len(fileword) == 0:
-                continue
-            # else
-            run_ns.append(int(fileword))
+        f = open(gpd["run_dim_fname"]['value'], "rb")
+        params_dict = pickle.load(f)
         f.close()
 
-    iterations = 5
-    for current_n in run_ns:
-        print(f"task {task} to "
-              f"{gpd['output_fname']['value']} with n={current_n}")
-        return_dict = manager.perform_runs_for(current_n, iterations)
+    manager = run_manager(handler)
+    ex_commandstr = manager.generate_commandstr(pdcutils.get_nth_dict(params_dict, 0))
+    print(f"example command:")
+    print(f"```{ex_commandstr}```")
+    
+    for i in range(pdcutils.count_permutations(params_dict)):
+        param_dict = pdcutils.get_nth_dict(params_dict, i)
+        print(f"task {task} to {gpd['output_fname']['value']} with params:")
+        for key in param_dict:
+            print(f"    {key}: {param_dict[key]['value']}")
+
+        return_dict = manager.perform_runs_for(param_dict)
         manager.write(return_dict)
 
     os.system(f"rm {gpd['stdout_fname']['value']}")

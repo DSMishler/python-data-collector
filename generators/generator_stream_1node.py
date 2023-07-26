@@ -22,33 +22,31 @@ class stream_1node_generator:
             return "pp"
         else:
             return "pe"
-    def generate_param_dict_list(self):
-        param_dict_list = []
-        amodes = [0,1,2]
-        bmodes = [-1,0,1,2]
-        for amode in amodes:
-            for bmode in bmodes:
-                param_dict_list.append({"amode": amode, "bmode": bmode})
-        return param_dict_list
+    def generate_params_dict(self, lens = [1000, 2000], amodes = [0], bmodes = [-1], iters = [5]):
+        param_dict = {}
+        param_dict["len"]={}
+        param_dict["amode"]={}
+        param_dict["bmode"]={}
+        param_dict["iterations"]={}
+        param_dict["len"]["flag"] = "-l"
+        param_dict["amode"]["flag"] = "-a"
+        param_dict["amode"]["flag"] = "-b"
+        param_dict["iterations"]["flag"] = "-i"
+        param_dict["len"]["values"] = lens
+        param_dict["amode"]["values"] = amodes
+        param_dict["amode"]["values"] = bmodes
+        param_dict["iterations"]["values"] = iters
+        return param_dict
     def set_vals(self, param_dict):
-        amode = param_dict["amode"]
-        bmode = param_dict["bmode"]
         of = "" #output file
         of += f"{self.data_dir}/"
         of += f"{self.today}_"
         of += f"{self.hostname}_"
         of += "stream_"
-        of += "np1_"
-        of += f"{self.bmode_to_style(bmode)}_"
-        of += f"{self.mode_to_char(amode)}"
-        of += "p"
-        if bmode == -1:
-            of += f"{self.mode_to_char(amode)}"
-        else:
-            of += f"{self.mode_to_char(bmode)}"
+        of += "np1"
         of += ".csv"
 
-        rf= f"{self.target_dir}/{self.target_file} -a {amode} -b {bmode}"
+        rf= f"{self.target_dir}/{self.target_file}"
 
         self.out_fname = of
         self.run_fname = rf

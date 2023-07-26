@@ -7,19 +7,13 @@ class heat3d_handler:
         return
     def refresh_current_runs(self):
         return {"time" : [], "compute_time": [], "dt_time": []}
-    def generate_commandstr(self, n, N):
-        commandstr = ""
-        if (self.infodict['run_preamble']['value'] is not None):
-            commandstr += f"{self.infodict['run_preamble']['value']} "
-        commandstr += f"{self.infodict['run_fname']['value']} "
-        commandstr += f"-X {n} "
-        commandstr += f"-Y {n} "
-        commandstr += f"-Z {n} "
-        commandstr += f"1>{self.infodict['stdout_fname']['value']} "
-        commandstr += f"2>{self.infodict['stderr_fname']['value']}"
-        return commandstr
-    def parse_tmp(self, N, data_dest):
+    def parse_tmp(self, param_dict, data_dest):
         f = open(self.infodict['stdout_fname']['value'], "r")
+
+        try:
+            N = param_dict["iterations"]["value"]
+        except KeyError:
+            N = None
 
         time = -1
         dt_time = -1
