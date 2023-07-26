@@ -25,6 +25,10 @@ class teams_bench_generator:
         for mode in modes:
             for ts in team_sizes:
                 for ls in league_sizes:
+                    if mode == 0:
+                        continue
+                    if mode == 1 and ts in [8,16,32]:
+                        continue
                     param_dict_list.append({"mode": mode, "ts": ts, "ls": ls})
         return param_dict_list
     def set_vals(self, param_dict):

@@ -27,15 +27,15 @@ gpd["run_max"]       = {"value": 40,
                         "flags": ["run_max", "runmax"]}
 gpd["range_min"]     = {"value": 10,
                         "tfunc": int,
-                        "desc" : "(if no `run_ns_fname`) minimum range",
+                        "desc" : "(if no `run_dim_fname`) minimum range",
                         "flags": ["min", "range_min"]}
 gpd["range_max"]     = {"value": 10,
                         "tfunc": int,
-                        "desc" : "(if no `run_ns_fname`) maximum range",
+                        "desc" : "(if no `run_dim_fname`) maximum range",
                         "flags": ["max", "range_max"]}
 gpd["range_stride"]  = {"value": 10,
                         "tfunc": int,
-                        "desc" : "(if no `run_ns_fname`) range stride",
+                        "desc" : "(if no `run_dim_fname`) range stride",
                         "flags": ["stride", "range_stride"]}
 gpd["run_preamble"]  = {"value": None,
                         "tfunc": str,
@@ -45,10 +45,10 @@ gpd["run_fname"]     = {"value": None,
                         "tfunc": str,
                         "desc" : "filename to run",
                         "flags": ["rfile", "run_fname", "rf"]}
-gpd["run_ns_fname"]  = {"value": None,
+gpd["run_dim_fname"] = {"value": None,
                         "tfunc": str,
-                        "desc" : "file containing desired datapoints",
-                        "flags": ["nfile", "run_ns_fname", "nf"]}
+                        "desc" : "pickle file containing desired datapoints",
+                        "flags": ["nfile", "run_dim_fname", "nf"]}
 gpd["output_fname"]  = {"value": "mzz_dataout_"+hostname+".csv",
                         "tfunc": str,
                         "desc" : "output csv of this program's collected data",
@@ -261,19 +261,12 @@ if __name__ == "__main__":
     run_ns = []
 
 
-    if gpd["run_ns_fname"]['value'] is None:
-        current_n = gpd["range_min"]['value']
-        while current_n <= gpd["range_max"]['value']:
-            run_ns.append(current_n)
-            current_n += gpd["range_stride"]['value']
+    if gpd["run_dim_fname"]['value'] is None:
+        print("you need a run dimension file!")
+        exit()
     else:
-        f = open(gpd["run_ns_fname"]['value'], "r")
-        filewords = re.split(r"[\n, ]", f.read())
-        for fileword in filewords:
-            if len(fileword) == 0:
-                continue
-            # else
-            run_ns.append(int(fileword))
+        f = open(gpd["run_dim_fname"]['value'], "rb")
+        datapoints_dict = pickle.load(f)
         f.close()
 
     iterations = 5

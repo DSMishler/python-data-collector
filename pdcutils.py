@@ -108,3 +108,32 @@ def generate_plot_code_dict(target):
         printstr += f"\"label\" : \"{vname}\""
         printstr += "}"
         print(printstr)
+
+
+def count_permutations(src_dict):
+    total_permutations = 1
+    for key in src_dict:
+        total_permutations *= len(src_dict[key]["values"])
+    return total_permutations
+
+def get_nth_dict(src_dict, n):
+    total_permutations = count_permutations(src_dict)
+    new_dict = {}
+    for key in src_dict:
+        key_arr_len = len(src_dict[key]["values"])
+        target = n % key_arr_len
+        new_dict[key] = {}
+        new_dict[key]["flag"] = src_dict[key]["flag"]
+        new_dict[key]["value"] = src_dict[key]["values"][target]
+        n = n // key_arr_len
+    return new_dict
+
+def get_example_dict():
+    ex_dict = {}
+    ex_dict["N"] = {}
+    ex_dict["TS"] = {}
+    ex_dict["N"]["flag"] = "-N"
+    ex_dict["TS"]["flag"] = "-TS"
+    ex_dict["N"]["values"] = [1,10,500]
+    ex_dict["TS"]["values"] = [2,8,16,128]
+    return ex_dict
