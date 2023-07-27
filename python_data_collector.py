@@ -8,8 +8,7 @@ import pdcutils
 
 # TODOs
 # - allow user to choose which handler to use
-# - shall I remove the option to pass iterations to the general handler?
-# - shall I move the run_fname to extra_args instead?
+# - decide how to handle data you don't necessarily want to permute
 
 hostname = socket.gethostname()
 
@@ -26,18 +25,6 @@ gpd["run_max"]       = {"value": 40,
                         "tfunc": int,
                         "desc" : "error out after this many runs on a point",
                         "flags": ["run_max", "runmax"]}
-gpd["range_min"]     = {"value": 10,
-                        "tfunc": int,
-                        "desc" : "(if no `run_dim_fname`) minimum range",
-                        "flags": ["min", "range_min"]}
-gpd["range_max"]     = {"value": 10,
-                        "tfunc": int,
-                        "desc" : "(if no `run_dim_fname`) maximum range",
-                        "flags": ["max", "range_max"]}
-gpd["range_stride"]  = {"value": 10,
-                        "tfunc": int,
-                        "desc" : "(if no `run_dim_fname`) range stride",
-                        "flags": ["stride", "range_stride"]}
 gpd["run_preamble"]  = {"value": None,
                         "tfunc": str,
                         "desc" : "Preamble for runs if needed (e.g. mpirun)",
@@ -101,8 +88,8 @@ def check_global_parameters():
     if gpd["run_fname"]["value"]is None:
         print("ERROR: must have a command to run (rf)")
         return False
-    if gpd["range_min"]["value"]> gpd["range_max"]["value"]:
-        print("ERROR: range error")
+    if gpd["run_dim_fname"]['value'] is None:
+        print("you need a run dimension file!")
         return False
     return True
 
@@ -265,13 +252,9 @@ if __name__ == "__main__":
               f" so I don't know what handler to use.")
         exit()
 
-    if gpd["run_dim_fname"]['value'] is None:
-        print("you need a run dimension file!")
-        exit()
-    else:
-        f = open(gpd["run_dim_fname"]['value'], "rb")
-        params_dict = pickle.load(f)
-        f.close()
+    f = open(gpd["run_dim_fname"]['value'], "rb")
+    params_dict = pickle.load(f)
+    f.close()
 
     manager = run_manager(handler)
     ex_commandstr = manager.generate_commandstr(pdcutils.get_nth_dict(params_dict, 0))

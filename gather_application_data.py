@@ -40,9 +40,9 @@ class generator_manager:
         if os.path.isfile(tmp_fname):
             print("detected pdc abort, manager also aborting")
             exit()
-    def all_runs(self):
+    def all_runs(self, requested_params={}):
         os.system(f"mkdir -p {self.generator.data_dir}")
-        params_dict = self.generator.generate_params_dict()
+        params_dict = self.generator.generate_params_dict(**requested_params)
         f = open(run_ps_fname, "wb")
         pickle.dump(params_dict, f)
         f.close()
@@ -93,7 +93,10 @@ if __name__ == "__main__":
     else:
         print(f"did not understand benchmark {benchmark}")
         exit()
-    manager.all_runs()
+    
+    requested_params = {}
+
+    manager.all_runs(requested_params)
 
     os.system(f"rm -f {run_ps_fname}")
 

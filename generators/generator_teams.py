@@ -18,11 +18,6 @@ class teams_bench_generator:
             return "uview"
         return None
     def generate_params_dict(self, lens = [1000, 2000], modes = [0, 1], iters = [5], TSs = [64], LSs = [64]):
-        import pdcutils
-        lens = pdcutils.generate_log_scale_array(2**27, 2**27, 2)
-        TSs = pdcutils.generate_log_scale_array(2**2, 2**10, 2)
-        LSs = pdcutils.generate_log_scale_array(2**2, 2**10, 2)
-        modes = [0,1,2]
         param_dict = {}
         param_dict["len"]={}
         param_dict["mode"]={}
