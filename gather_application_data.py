@@ -90,11 +90,15 @@ if __name__ == "__main__":
         manager = generator_manager(generators.generator_osu_bench.osu_bench_generator)
     elif benchmark == "teams_bench":
         manager = generator_manager(generators.generator_teams.teams_bench_generator)
+    elif benchmark == "heat3d":
+        manager = generator_manager(generators.generator_heat3d.heat3d_generator)
     else:
         print(f"did not understand benchmark {benchmark}")
         exit()
     
-    requested_params = {}
+    requested_params = {} # currently for heat3d 1 node
+    requested_params["sizes"] = [10*i for i in range(1,41)]
+    requested_params["iterations"] = [10000]
 
     manager.all_runs(requested_params)
 

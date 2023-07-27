@@ -111,7 +111,12 @@ class run_manager:
         for key in param_dict:
             val = param_dict[key]["value"]
             flag = param_dict[key]["flag"]
-            commandstr += f"{flag} {val} "
+            if type(flag) is not list:
+                commandstr += f"{flag} {val} "
+            else:
+                for fl in flag:
+                    commandstr += f"{fl} {val} "
+
         commandstr += f"1>{gpd['stdout_fname']['value']} "
         commandstr += f"2>{gpd['stderr_fname']['value']}"
         return commandstr
