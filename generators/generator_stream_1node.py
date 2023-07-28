@@ -25,16 +25,16 @@ class stream_1node_generator:
     def generate_params_dict(self, lens = [1000, 2000], amodes = [0], bmodes = [-1], iters = [5]):
         param_dict = {}
         param_dict["len"]={}
-        param_dict["amode"]={}
-        param_dict["bmode"]={}
-        param_dict["iterations"]={}
-        param_dict["len"]["flag"] = "-l"
-        param_dict["amode"]["flag"] = "-a"
-        param_dict["amode"]["flag"] = "-b"
-        param_dict["iterations"]["flag"] = "-i"
+        param_dict["len"]["flags"] = ["-l"]
         param_dict["len"]["values"] = lens
+        param_dict["amode"]={}
+        param_dict["amode"]["flags"] = ["-a"]
         param_dict["amode"]["values"] = amodes
-        param_dict["amode"]["values"] = bmodes
+        param_dict["bmode"]={}
+        param_dict["bmode"]["flags"] = ["-b"]
+        param_dict["bmode"]["values"] = bmodes
+        param_dict["iterations"]={}
+        param_dict["iterations"]["flags"] = ["-i"]
         param_dict["iterations"]["values"] = iters
         return param_dict
     def set_vals(self, param_dict):

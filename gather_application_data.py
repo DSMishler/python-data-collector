@@ -97,8 +97,9 @@ if __name__ == "__main__":
         exit()
     
     requested_params = {} # currently for heat3d 1 node
-    requested_params["sizes"] = [10*i for i in range(1,41)]
+    requested_params["sizes"] = [100*i for i in range(1,3)]
     requested_params["iterations"] = [10000]
+    requested_params["NPs"] = [1,4]
 
     manager.all_runs(requested_params)
 

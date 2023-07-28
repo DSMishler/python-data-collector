@@ -18,13 +18,13 @@ class stream_2node_generator:
     def generate_params_dict(self, lens = [1000, 2000], modes = [0, 1], iters = [5]):
         param_dict = {}
         param_dict["len"]={}
-        param_dict["mode"]={}
-        param_dict["iterations"]={}
-        param_dict["len"]["flag"] = "-l"
-        param_dict["mode"]["flag"] = "-m"
-        param_dict["iterations"]["flag"] = "-i"
+        param_dict["len"]["flags"] = ["-l"]
         param_dict["len"]["values"] = lens
+        param_dict["mode"]={}
+        param_dict["mode"]["flags"] = ["-m"]
         param_dict["mode"]["values"] = modes
+        param_dict["iterations"]={}
+        param_dict["iterations"]["flags"] = ["-i"]
         param_dict["iterations"]["values"] = iters
         return param_dict
     def set_vals(self, param_dict):

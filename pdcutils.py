@@ -134,8 +134,12 @@ def get_nth_dict(src_dict, n):
         key_arr_len = len(src_dict[key]["values"])
         target = n % key_arr_len
         new_dict[key] = {}
-        new_dict[key]["flag"] = src_dict[key]["flag"]
+        new_dict[key]["flags"] = src_dict[key]["flags"]
         new_dict[key]["value"] = src_dict[key]["values"][target]
+        try:
+            new_dict[key]["preamble"] = src_dict[key]["preamble"]
+        except KeyError:
+            new_dict[key]["preamble"] = False
         n = n // key_arr_len
     return new_dict
 
@@ -143,8 +147,33 @@ def get_example_dict():
     ex_dict = {}
     ex_dict["N"] = {}
     ex_dict["TS"] = {}
-    ex_dict["N"]["flag"] = "-N"
-    ex_dict["TS"]["flag"] = "-TS"
+    ex_dict["N"]["flags"] = ["-N"]
+    ex_dict["TS"]["flags"] = ["-TS"]
     ex_dict["N"]["values"] = [1,10,500]
     ex_dict["TS"]["values"] = [2,8,16,128]
     return ex_dict
+
+def flags_from_dict(param_dict, flags_type="runfile"):
+    pre_flags = ""
+    func_flags = ""
+    for key in param_dict:
+        flag_is_pre = False
+
+        if param_dict[key]["preamble"] == True:
+            flag_is_pre = True
+
+        val = param_dict[key]["value"]
+        flags = param_dict[key]["flags"]
+
+        if flag_is_pre is True:
+            for flag in flags:
+                pre_flags += f"{flag} {val} "
+        else:
+            for flag in flags:
+                func_flags += f"{flag} {val} "
+
+    if flags_type == "preamble":
+        return pre_flags
+    elif flags_type == "function":
+        return func_flags
+            

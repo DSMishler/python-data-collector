@@ -94,6 +94,7 @@ def check_global_parameters():
     return True
 
 
+
 class run_manager:
     def __init__(self, handler):
         self.handler = handler
@@ -107,15 +108,10 @@ class run_manager:
         commandstr = ""
         if (gpd['run_preamble']['value'] is not None):
             commandstr += f"{gpd['run_preamble']['value']} "
+        commandstr += pdcutils.flags_from_dict(param_dict, flags_type="preamble")
+
         commandstr += f"{gpd['run_fname']['value']} "
-        for key in param_dict:
-            val = param_dict[key]["value"]
-            flag = param_dict[key]["flag"]
-            if type(flag) is not list:
-                commandstr += f"{flag} {val} "
-            else:
-                for fl in flag:
-                    commandstr += f"{fl} {val} "
+        commandstr += pdcutils.flags_from_dict(param_dict, flags_type="function")
 
         commandstr += f"1>{gpd['stdout_fname']['value']} "
         commandstr += f"2>{gpd['stderr_fname']['value']}"
