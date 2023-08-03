@@ -97,9 +97,14 @@ if __name__ == "__main__":
         exit()
     
     requested_params = {} # currently for heat3d 1 node
-    requested_params["sizes"] = [100*i for i in range(1,3)]
-    requested_params["iterations"] = [10000]
-    requested_params["NPs"] = [1,4]
+    requested_params["lens"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
+    requested_params["iterations"] = [500]
+    requested_params["modes"] = [0,1,3]
+    # requested_params["hosts"] = ["weaver6,weaver7"]
+    # requested_params["npernode"] = [1]
+    # requested_params["mpienv"] = ["NVSHMEMTEST_USE_MPI_LAUNCHER=1"]
+
+    manager.generator.out_fname
 
     manager.all_runs(requested_params)
 

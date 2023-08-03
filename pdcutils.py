@@ -177,3 +177,8 @@ def flags_from_dict(param_dict, flags_type="runfile"):
     elif flags_type == "function":
         return func_flags
             
+
+def add_to_csv_fname(fname, addme):
+    csvindex = fname.index(".csv")
+    retstr = fname[:csvindex]+addme+fname[csvindex:]
+

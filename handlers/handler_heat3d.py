@@ -6,7 +6,7 @@ class heat3d_handler:
         self.infodict = infodict
         return
     def refresh_current_runs(self):
-        return {"time" : [], "compute_time": [], "dt_time": []}
+        return {"time" : [], "compute_time": [], "update_time": []}
     def parse_tmp(self, param_dict, data_dest):
         f = open(self.infodict['stdout_fname']['value'], "r")
 
@@ -43,7 +43,7 @@ class heat3d_handler:
 
                 break
         data_dest["time"].append(time)
-        data_dest["compute_time"].append(compute_time)
-        data_dest["dt_time"].append(dt_time)
+        data_dest["compute_time"].append(dt_time)
+        data_dest["update_time"].append(compute_time)
 
         f.close()

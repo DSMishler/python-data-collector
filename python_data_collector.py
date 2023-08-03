@@ -156,7 +156,7 @@ class run_manager:
         while(myerror > gpd["error_max"]['value']):
             print(f"        run {nruns} (needed because error is currently too"
                   f" high at {myerror*100}%)")
-            self.run_once(n, param_dict)
+            self.run_once(param_dict)
             self.parse_tmp(param_dict)
             myerror = self.calculate_max_percent_error()
             nruns += 1
@@ -168,7 +168,7 @@ class run_manager:
         return_dict = {"nruns": nruns}
 
         for key in param_dict:
-            return_dict[key] = param_dict[key]["value"]
+            return_dict[key] = str(param_dict[key]["value"]).replace(',',':')
 
         for attr in self.current_runs:
             attr_mean = pdcutils.mean(self.current_runs[attr])

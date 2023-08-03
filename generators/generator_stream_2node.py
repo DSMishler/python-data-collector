@@ -15,7 +15,7 @@ class stream_2node_generator:
         if(mode == 1):
             return "rma"
         return None
-    def generate_params_dict(self, lens = [1000, 2000], modes = [0, 1], iters = [5]):
+    def generate_params_dict(self, lens = [1000, 2000], modes = [0, 1], iterations = [5], hosts=None, npernode=None, mpienv=None):
         param_dict = {}
         param_dict["len"]={}
         param_dict["len"]["flags"] = ["-l"]
@@ -25,7 +25,23 @@ class stream_2node_generator:
         param_dict["mode"]["values"] = modes
         param_dict["iterations"]={}
         param_dict["iterations"]["flags"] = ["-i"]
-        param_dict["iterations"]["values"] = iters
+        param_dict["iterations"]["values"] = iterations
+        if hosts is not None:
+            param_dict["hosts"]={}
+            param_dict["hosts"]["flags"] = ["--host"]
+            param_dict["hosts"]["values"] = hosts
+            param_dict["hosts"]["preamble"] = True
+        if npernode is not None:
+            param_dict["npernode"]={}
+            param_dict["npernode"]["flags"] = ["-npernode"]
+            param_dict["npernode"]["values"] = npernode
+            param_dict["npernode"]["preamble"] = True
+        if mpienv is not None:
+            param_dict["mpienv"]={}
+            param_dict["mpienv"]["flags"] = ["-x"]
+            param_dict["mpienv"]["values"] = mpienv
+            param_dict["mpienv"]["preamble"] = True
+            
         return param_dict
     def set_vals(self, param_dict):
         of = "" #output file
@@ -33,7 +49,7 @@ class stream_2node_generator:
         of += f"{self.today}_"
         of += f"{self.hostname}_"
         of += "stream_"
-        of += "np2"
+        of += "np2_NVL"
         of += ".csv"
 
         rf= f"{self.target_dir}/{self.target_file}"

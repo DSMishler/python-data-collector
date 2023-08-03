@@ -1,7 +1,7 @@
 class heat3d_generator:
     def __init__(self, today, hostname, target_dir):
         self.name        = "heat3d_generator"
-        self.target_file = "rma_heat3d"
+        self.target_file = "rma/rma_heat3d"
         self.data_dir    = "heat3d_data"
         self.today       = today
         self.hostname    = hostname
@@ -24,11 +24,13 @@ class heat3d_generator:
 
         return param_dict
     def set_vals(self, param_dict):
+        file_type = self.target_file[:self.target_file.index('/')]
         of = "" #output file
         of += f"{self.data_dir}/"
         of += f"{self.today}_"
         of += f"{self.hostname}_"
-        of += "heat3d"
+        of += "heat3d_"
+        of += f"{file_type}"
         of += ".csv"
 
         rf= f"{self.target_dir}/{self.target_file}"
