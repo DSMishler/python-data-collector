@@ -6,9 +6,20 @@ class heat3d_generator:
         self.today       = today
         self.hostname    = hostname
         self.target_dir  = target_dir
-        self.out_fname   = None
-        self.run_fname   = None
         self.pre         = "mpirun"
+        file_type = self.target_file[:self.target_file.index('/')]
+        of = "" #output file
+        of += f"{self.data_dir}/"
+        of += f"{self.today}_"
+        of += f"{self.hostname}_"
+        of += "heat3d_"
+        of += f"{file_type}"
+        of += ".csv"
+
+        rf= f"{self.target_dir}/{self.target_file}"
+
+        self.out_fname = of
+        self.run_fname = rf
     def generate_params_dict(self, sizes = [1000, 2000], iterations = [1000], NPs = [1]):
         param_dict = {}
         param_dict["size"]={}
@@ -23,17 +34,3 @@ class heat3d_generator:
         param_dict["NPs"]["preamble"] = True
 
         return param_dict
-    def set_vals(self, param_dict):
-        file_type = self.target_file[:self.target_file.index('/')]
-        of = "" #output file
-        of += f"{self.data_dir}/"
-        of += f"{self.today}_"
-        of += f"{self.hostname}_"
-        of += "heat3d_"
-        of += f"{file_type}"
-        of += ".csv"
-
-        rf= f"{self.target_dir}/{self.target_file}"
-
-        self.out_fname = of
-        self.run_fname = rf

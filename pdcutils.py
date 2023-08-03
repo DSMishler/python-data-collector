@@ -181,4 +181,16 @@ def flags_from_dict(param_dict, flags_type="runfile"):
 def add_to_csv_fname(fname, addme):
     csvindex = fname.index(".csv")
     retstr = fname[:csvindex]+addme+fname[csvindex:]
+    return retstr
 
+
+def remove_last_csv_tag(fname):
+    csvindex = fname.index(".csv")
+    uscore_index = 0
+    while True:
+        try:
+            uscore_index = fname[uscore_index+1:].index(".csv")
+        except ValueError:
+            break
+    retstr = fname[:uscore_index]+fname[csvindex:]
+    return retstr

@@ -47,7 +47,6 @@ class generator_manager:
         pickle.dump(params_dict, f)
         f.close()
 
-        self.generator.set_vals(params_dict)
         pdcstr = self.generate_pdcstr()
         self.run(pdcstr)
 
@@ -97,14 +96,14 @@ if __name__ == "__main__":
         exit()
     
     requested_params = {} # currently for heat3d 1 node
-    requested_params["lens"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
+    requested_params["lens"] = pdcutils.generate_log_scale_stepped_array(1e3,1e8,1.2)
     requested_params["iterations"] = [500]
     requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]
     # requested_params["npernode"] = [1]
     # requested_params["mpienv"] = ["NVSHMEMTEST_USE_MPI_LAUNCHER=1"]
 
-    manager.generator.out_fname
+    manager.generator.out_fname=pdcutils.add_to_csv_fname(manager.generator.out_fname, "_XBUS")
 
     manager.all_runs(requested_params)
 

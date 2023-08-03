@@ -6,9 +6,20 @@ class teams_bench_generator:
         self.today       = today
         self.hostname    = hostname
         self.target_dir  = target_dir
-        self.out_fname   = None
-        self.run_fname   = None
         self.pre         = ""
+
+        of = "" #output file
+        of += f"{self.data_dir}/"
+        of += f"{self.today}_"
+        of += f"{self.hostname}_"
+        of += "teams_bench_"
+        of += "np1"
+        of += ".csv"
+
+        rf= f"{self.target_dir}/{self.target_file}"
+
+        self.out_fname = of
+        self.run_fname = rf
     def mode_to_label(self, mode):
         if(mode == 0):
             return "nview"
@@ -35,16 +46,3 @@ class teams_bench_generator:
         param_dict["iterations"]["flags"] = ["-I"]
         param_dict["iterations"]["values"] = iters
         return param_dict
-    def set_vals(self, param_dict):
-        of = "" #output file
-        of += f"{self.data_dir}/"
-        of += f"{self.today}_"
-        of += f"{self.hostname}_"
-        of += "teams_bench_"
-        of += "np1"
-        of += ".csv"
-
-        rf= f"{self.target_dir}/{self.target_file}"
-
-        self.out_fname = of
-        self.run_fname = rf
