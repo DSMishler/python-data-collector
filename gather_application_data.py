@@ -11,7 +11,7 @@ target_dir   = None
 benchmark    = None
 hostname     = socket.gethostname()
 tmp_fname    = f"mzz_gather_{hostname}.txt"
-pdc_root     = "~/Kokkos/python-data-collector"
+pdc_root     = "~/python-data-collector"
 pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
 run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
@@ -91,19 +91,21 @@ if __name__ == "__main__":
         manager = generator_manager(generators.generator_teams.teams_bench_generator)
     elif benchmark == "heat3d":
         manager = generator_manager(generators.generator_heat3d.heat3d_generator)
+    elif benchmark == "gemm":
+        manager = generator_manager(generators.generator_dplasma_gemm.dplasma_gemm_generator)
     else:
         print(f"did not understand benchmark {benchmark}")
         exit()
     
     requested_params = {} # currently for heat3d 1 node
-    requested_params["lens"] = pdcutils.generate_log_scale_stepped_array(1e3,1e8,1.2)
-    requested_params["iterations"] = [500]
-    requested_params["modes"] = [0,1,3]
+    requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
+    # requested_params["iterations"] = [500]
+    # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]
     # requested_params["npernode"] = [1]
     # requested_params["mpienv"] = ["NVSHMEMTEST_USE_MPI_LAUNCHER=1"]
 
-    manager.generator.out_fname=pdcutils.add_to_csv_fname(manager.generator.out_fname, "_XBUS")
+    # manager.generator.out_fname=pdcutils.add_to_csv_fname(manager.generator.out_fname, "_XBUS")
 
     manager.all_runs(requested_params)
 
