@@ -12,6 +12,7 @@ class dplasma_gemm_handler:
 
         time = -1
         GFLOPs = -1
+        appended_something = False
 
         lines = f.read().split('\n')
         for line in lines:
@@ -19,18 +20,19 @@ class dplasma_gemm_handler:
             for i in range(len(words)):
                 if words[i] == "gflops":
                     GFLOPs = pdcutils.dtype_from_word(float, words[i-1])
-                    break
-
-        for line in lines:
-            words = line.split()
-            for i in range(len(words)):
+                    # will grab the second GFLOPs
                 if words[i] == "TIME(s)":
                     time = pdcutils.dtype_from_word(float, words[i+1])
-                    break
+            # print("PDC HANDLER:", time, GFLOPs)
+            if time != -1 and GFLOPs != -1:
+                data_dest["time_total"].append(time)
+                data_dest["GFLOPs"].append(GFLOPs)
+                appended_something = True
 
 
+        if appended_something is False:
+            data_dest["time_total"].append(-1)
+            data_dest["GFLOPs"].append(-1)
 
-        data_dest["time_total"].append(time)
-        data_dest["GFLOPs"].append(GFLOPs)
 
         f.close()

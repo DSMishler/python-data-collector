@@ -10,6 +10,8 @@ import pdcutils
 target_dir   = None
 benchmark    = None
 hostname     = socket.gethostname()
+if hostname.find('.') != -1: # prune dot from hostname if needed
+    hostname = hostname[:hostname.find('.')]
 tmp_fname    = f"mzz_gather_{hostname}.txt"
 pdc_root     = "~/python-data-collector"
 pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
@@ -98,7 +100,10 @@ if __name__ == "__main__":
         exit()
     
     requested_params = {} # currently for heat3d 1 node
-    requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
+    # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
+    requested_params["Ns"] = [i for i in range(1536, 9217, 1536)]
+    requested_params["NBs"] = [256]
+    requested_params["nruns"] = [10]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]

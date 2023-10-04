@@ -146,12 +146,24 @@ class run_manager:
 
     def perform_runs_for(self, param_dict):
         nruns = 0
+        runs_per_cmd = 0
+        cmds = 0
+        try:
+            param_dict["nruns"]
+            runs_per_cmd = param_dict["nruns"]['value']
+        except KeyError:
+            runs_per_cmd = 1
         self.refresh_current_runs()
-        for i in range(gpd["run_min"]['value']):
-            print(f"        run {nruns}")
+        while nruns < gpd["run_min"]['value']:
+            print(f"        run {nruns}",end="")
+            if runs_per_cmd > 1:
+                print(f"-{nruns+runs_per_cmd-1}")
+            else:
+                print()
             self.run_once(param_dict)
             self.parse_tmp(param_dict)
-            nruns += 1
+            nruns += runs_per_cmd
+            cmds += 1
         myerror = self.calculate_max_percent_error()
         while(myerror > gpd["error_max"]['value']):
             print(f"        run {nruns} (needed because error is currently too"
@@ -159,13 +171,15 @@ class run_manager:
             self.run_once(param_dict)
             self.parse_tmp(param_dict)
             myerror = self.calculate_max_percent_error()
-            nruns += 1
-            if (nruns >= gpd["run_max"]['value']):
+            nruns += runs_per_cmd
+            cmds += 1
+            if (cmds >= gpd["run_max"]['value']):
                 print("ERROR: too many runs for this to make sense.")
-                print("(adjust rum_max if you think this was a mistake.)")
+                print("(adjust run_max if you think this was a mistake.)")
                 exit()
 
         return_dict = {"nruns": nruns}
+        return_dict["cmds"] = cmds
 
         for key in param_dict:
             return_dict[key] = str(param_dict[key]["value"]).replace(',',':')
