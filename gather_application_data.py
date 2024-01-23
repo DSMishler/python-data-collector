@@ -95,15 +95,16 @@ if __name__ == "__main__":
         manager = generator_manager(generators.generator_heat3d.heat3d_generator)
     elif benchmark == "gemm":
         manager = generator_manager(generators.generator_dplasma_gemm.dplasma_gemm_generator)
+    elif benchmark.lower() == "pcc":
+        manager = generator_manager(generators.generator_PCC.PCC_generator)
     else:
         print(f"did not understand benchmark {benchmark}")
         exit()
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(1536, 9217, 1536)]
-    requested_params["NBs"] = [256]
-    requested_params["nruns"] = [10]
+    requested_params["Ns"] = [i for i in range(1000, 15001, 1000)]
+    requested_params["codes"] = ["original"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]

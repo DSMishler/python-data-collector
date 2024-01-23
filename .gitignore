@@ -11,3 +11,4 @@ mzz_*.txt
 *data/
 __pycache__/
 *.csv
+*.tsv

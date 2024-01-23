@@ -265,6 +265,9 @@ if __name__ == "__main__":
     elif "gemm" in gpd["run_fname"]['value'].lower():
         handler = handlers.handler_dplasma_gemm.dplasma_gemm_handler(gpd)
         task = "dplasma_dgemm"
+    elif "pcc" in gpd["run_fname"]['value'].lower():
+        handler = handlers.handler_PCC.PCC_handler(gpd)
+        task = "PCC"
     else:
         print(f"ERROR: I don't know what program you're running,"
               f" so I don't know what handler to use.")
