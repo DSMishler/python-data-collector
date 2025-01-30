@@ -3,7 +3,7 @@
 class PCC_generator:
     def __init__(self, today, hostname, target_dir):
         self.name        = "PCC_generator"
-        self.target_file = "PCC_manager.py"
+        self.target_file = "PCC_performance_manager.py"
         self.data_dir    = "PCC_data"
         self.today       = today
         self.hostname    = hostname

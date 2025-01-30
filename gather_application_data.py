@@ -1,3 +1,11 @@
+# Daniel Mishler
+"""
+This file calls the python data collector (set it up to where yours is
+on your system) and that python data collector will do the rest of the work.
+This file is meant to generate the parameters and manage the data collector
+(which is then in turn meant to call the program in question several times)
+"""
+
 import sys
 import os
 import socket
@@ -13,7 +21,7 @@ hostname     = socket.gethostname()
 if hostname.find('.') != -1: # prune dot from hostname if needed
     hostname = hostname[:hostname.find('.')]
 tmp_fname    = f"mzz_gather_{hostname}.txt"
-pdc_root     = "~/python-data-collector"
+pdc_root     = "/lustre/isaac/proj/UTK0348/mishler/python-data-collector"
 pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
 run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
@@ -40,6 +48,8 @@ class generator_manager:
     def run(self, pdcstr):
         os.system(pdcstr)
         if os.path.isfile(tmp_fname):
+            # tmp_fname should be removed, so if it's still there, something
+            # went wrong during the run.
             print("detected pdc abort, manager also aborting")
             exit()
     def all_runs(self, requested_params={}):
@@ -52,7 +62,13 @@ class generator_manager:
         pdcstr = self.generate_pdcstr()
         self.run(pdcstr)
 
-help_message = "no help yet. Good luck chief, you're on your own."
+help_message = """
+gather_application_data.py
+This file is meant to manage the Python Data Collector python_data_collector.py
+You will need to fiddle around in this code to set up the specifics of your call
+And then call this code with the proper directory. For example:
+Python gather_application_data.py b PCC td ~/PCC_stuff
+"""
 
 def parse_args(args):
     global target_dir
@@ -103,8 +119,9 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(1000, 20001, 1000)]
-    requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
+    requested_params["Ns"] = [i for i in range(500, 25001, 500)]
+    # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
+    requested_params["codes"] = ["pandas"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]

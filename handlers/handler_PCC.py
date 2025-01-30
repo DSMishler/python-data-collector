@@ -17,7 +17,7 @@ class PCC_handler:
         for line in lines:
             words = line.split()
             for i in range(len(words)):
-                if words[i] == "time:":
+                if words[i] == "time_total:":
                     time = pdcutils.dtype_from_word(float, words[i+1])
                     break
             if time != -1:

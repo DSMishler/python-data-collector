@@ -13,10 +13,15 @@ import pdcutils
 hostname = socket.gethostname()
 
 gpd = {} # global_parameters_dictionary
+# This program runs as many times as necessary on every point until
+# the error of the desired quanitites is lower than a number. Think
+# of this as a percentage, so 0.01 is 1%. This is simple gaussian error, so
+# more runs with the same standard deviation lowers the error
 gpd["error_max"]     = {"value": 0.1,
                         "tfunc": float,
                         "desc" : "error cutoff for each point",
                         "flags": ["error", "max_error"]}
+# minimum number of runs to collect for each data point
 gpd["run_min"]       = {"value": 2,
                         "tfunc": int,
                         "desc" : "minimum runs for each point",
@@ -54,7 +59,8 @@ gpd["stderr_fname"]  = {"value": "mzz_err_tmp_"+hostname+".txt",
 help_message = "python data collector. A program designed to make collecting"
 help_message += "data easy and robust in your workflow. Pass any of the"
 help_message += "following through the command line as separate arguments"
-help_message += "(e.g. stride 5)."
+help_message += str([f"{key}: {gpd[key]['flags']}" for key in gpd])
+help_message += "(e.g. nruns 5)."
 
 
 def print_global_parameters():
@@ -75,6 +81,7 @@ def parse_args(args):
         for key in gpd:
             if this_arg in gpd[key]["flags"]:
                 type_func = gpd[key]["tfunc"]
+                # a typing function like (int, str, float, etc.)
                 i += 1
                 gpd[key]["value"] = type_func(args[i])
                 arg_found = True
