@@ -7,8 +7,9 @@
 # default python temp files
 mzz_*.txt
 
-# data directories, pychache
+# data directories, pychache, slurm logs
 *data/
 __pycache__/
+slurm/
 *.csv
 *.tsv
