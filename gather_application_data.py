@@ -21,7 +21,7 @@ hostname     = socket.gethostname()
 if hostname.find('.') != -1: # prune dot from hostname if needed
     hostname = hostname[:hostname.find('.')]
 tmp_fname    = f"mzz_gather_{hostname}.txt"
-pdc_root     = "/lustre/isaac/proj/UTK0348/mishler/python-data-collector"
+pdc_root     = "/lustre/isaac24/proj/UTK0348/mishler/python-data-collector"
 pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
 run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
@@ -91,9 +91,12 @@ def parse_args(args):
         i += 1
 
 if __name__ == "__main__":
-    print(f"begin at {datetime.datetime.now()}")
+    begin_time = datetime.datetime.now()
+    print(f"begin at {begin_time}")
 
     parse_args(sys.argv)
+    assert benchmark is not None, "you must provide a benchmark"
+    assert target_dir is not None, "you must provide a target directory"
 
     # pdcutils.generate_run_ps_file(run_np_fname, 1e5, 4e8, 1.2)
     
@@ -119,9 +122,10 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(500, 25001, 500)]
+    requested_params["Ns"] = [i for i in range(50, 2001, 50)]
+    requested_params["ks"] = [i for i in range(500, 2001, 500)]
     # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
-    requested_params["codes"] = ["pandas"]
+    requested_params["codes"] = ["omp_cpp"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]
@@ -134,4 +138,5 @@ if __name__ == "__main__":
 
     os.system(f"rm -f {run_ps_fname}")
 
+    print(f"began at {begin_time}")
     print(f"ended at {datetime.datetime.now()}")

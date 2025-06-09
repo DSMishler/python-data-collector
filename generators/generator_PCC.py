@@ -21,11 +21,14 @@ class PCC_generator:
 
         self.out_fname = of
         self.run_fname = rf
-    def generate_params_dict(self, Ns = [1000, 2000, 10000], codes = ["original"]):
+    def generate_params_dict(self, Ns = [1000, 2001, 10000], ks = [100, 201, 100], codes = ["cpp"]):
         param_dict = {}
         param_dict["N"]={}
         param_dict["N"]["flags"] = ["-N"]
         param_dict["N"]["values"] = Ns
+        param_dict["k"]={}
+        param_dict["k"]["flags"] = ["-k"]
+        param_dict["k"]["values"] = ks
         param_dict["codes"]={}
         param_dict["codes"]["flags"] = ["-code"]
         param_dict["codes"]["values"] = codes

@@ -26,7 +26,7 @@ gpd["run_min"]       = {"value": 2,
                         "tfunc": int,
                         "desc" : "minimum runs for each point",
                         "flags": ["run_min", "runs", "nruns"]}
-gpd["run_max"]       = {"value": 40,
+gpd["run_max"]       = {"value": 5,
                         "tfunc": int,
                         "desc" : "error out after this many runs on a point",
                         "flags": ["run_max", "runmax"]}
@@ -145,8 +145,11 @@ class run_manager:
     def calculate_max_percent_error(self):
         max_error = 0
         for key in self.current_runs:
-            myerror =  pdcutils.gaussian_error(self.current_runs[key])
-            myerror /= pdcutils.mean(self.current_runs[key])
+            myerror = pdcutils.gaussian_error(self.current_runs[key])
+            try:
+                myerror /= pdcutils.mean(self.current_runs[key])
+            except ZeroDivisionError:
+                pass
             if myerror > max_error:
                 max_error = myerror
         return max_error
@@ -171,6 +174,9 @@ class run_manager:
             self.parse_tmp(param_dict)
             nruns += runs_per_cmd
             cmds += 1
+            # check that the number of data points is reasonable
+            for key in self.current_runs:
+                assert len(self.current_runs[key]) == nruns, f"expected {nruns} entries for key {key}, found {len(self.current_runs[key])}"
         myerror = self.calculate_max_percent_error()
         while(myerror > gpd["error_max"]['value']):
             print(f"        run {nruns} (needed because error is currently too"
@@ -181,9 +187,10 @@ class run_manager:
             nruns += runs_per_cmd
             cmds += 1
             if (cmds >= gpd["run_max"]['value']):
-                print("ERROR: too many runs for this to make sense.")
+                print("aborting because current runs exceed run_max. Moving on.")
                 print("(adjust run_max if you think this was a mistake.)")
-                exit()
+                # can make it exit or have other behavior. Just warning for now.
+                break
 
         return_dict = {"nruns": nruns}
         return_dict["cmds"] = cmds
