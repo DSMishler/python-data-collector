@@ -1,7 +1,7 @@
 class dplasma_gemm_generator:
     def __init__(self, today, hostname, target_dir):
         self.name        = "dplasma_gemm_generator"
-        self.target_file = "testing_dgemm_mtest"
+        self.target_file = "testing_dgemm"
         self.data_dir    = "dplasma_gemm_data"
         self.today       = today
         self.hostname    = hostname

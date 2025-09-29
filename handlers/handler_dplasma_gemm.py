@@ -28,9 +28,12 @@ class dplasma_gemm_handler:
                 data_dest["time_total"].append(time)
                 data_dest["GFLOPs"].append(GFLOPs)
                 appended_something = True
+                time = -1
+                GFLOPs = -1
 
 
         if appended_something is False:
+            assert 0, "error! failed to find something at all"
             data_dest["time_total"].append(-1)
             data_dest["GFLOPs"].append(-1)
 

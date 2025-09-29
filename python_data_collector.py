@@ -155,7 +155,7 @@ class run_manager:
         return max_error
 
     def perform_runs_for(self, param_dict):
-        nruns = 0
+        n_runs = 0
         runs_per_cmd = 0
         cmds = 0
         try:
@@ -164,35 +164,39 @@ class run_manager:
         except KeyError:
             runs_per_cmd = 1
         self.refresh_current_runs()
-        while nruns < gpd["run_min"]['value']:
-            print(f"        run {nruns}",end="")
+        while n_runs < gpd["run_min"]['value']:
+            print(f"        run {n_runs}",end="")
             if runs_per_cmd > 1:
-                print(f"-{nruns+runs_per_cmd-1}")
+                print(f"-{n_runs+runs_per_cmd-1}")
             else:
                 print()
             self.run_once(param_dict)
             self.parse_tmp(param_dict)
-            nruns += runs_per_cmd
+            n_runs += runs_per_cmd
             cmds += 1
             # check that the number of data points is reasonable
             for key in self.current_runs:
-                assert len(self.current_runs[key]) == nruns, f"expected {nruns} entries for key {key}, found {len(self.current_runs[key])}"
+                assert len(self.current_runs[key]) == n_runs, f"expected {n_runs} entries for key {key}, found {len(self.current_runs[key])}"
         myerror = self.calculate_max_percent_error()
         while(myerror > gpd["error_max"]['value']):
-            print(f"        run {nruns} (needed because error is currently too"
-                  f" high at {myerror*100}%)")
+            if runs_per_cmd > 1:
+                n_runs_str = f"{n_runs}-{n_runs+runs_per_cmd-1}"
+            else:
+                n_runs_str = f"{n_runs}"
+            print(f"        run {n_runs_str} (needed because error is currently too"
+                  f" high at {myerror*100:.2f}%)")
             self.run_once(param_dict)
             self.parse_tmp(param_dict)
             myerror = self.calculate_max_percent_error()
-            nruns += runs_per_cmd
+            n_runs += runs_per_cmd
             cmds += 1
-            if (cmds >= gpd["run_max"]['value']):
+            if (n_runs >= gpd["run_max"]['value']):
                 print("aborting because current runs exceed run_max. Moving on.")
                 print("(adjust run_max if you think this was a mistake.)")
                 # can make it exit or have other behavior. Just warning for now.
                 break
 
-        return_dict = {"nruns": nruns}
+        return_dict = {"n_runs": n_runs}
         return_dict["cmds"] = cmds
 
         for key in param_dict:
@@ -303,6 +307,7 @@ if __name__ == "__main__":
             print(f"    {key}: {param_dict[key]['value']}")
 
         return_dict = manager.perform_runs_for(param_dict)
+        return_dict["host_system"] = hostname
         manager.write(return_dict)
 
     os.system(f"rm {gpd['stdout_fname']['value']}")

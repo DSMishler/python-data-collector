@@ -122,10 +122,10 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(50, 2001, 50)]
-    requested_params["ks"] = [i for i in range(500, 2001, 500)]
+    requested_params["Ns"] = [i for i in range(42000, 60001, 2000)]
+    requested_params["ks"] = [i for i in range(42000, 60001, 6000)]
     # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
-    requested_params["codes"] = ["omp_cpp"]
+    requested_params["codes"] = ["polars"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]
