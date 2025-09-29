@@ -114,6 +114,8 @@ if __name__ == "__main__":
         manager = generator_manager(generators.generator_heat3d.heat3d_generator)
     elif benchmark == "gemm":
         manager = generator_manager(generators.generator_dplasma_gemm.dplasma_gemm_generator)
+    elif benchmark == "syrk":
+        manager = generator_manager(generators.generator_dplasma_syrk.dplasma_syrk_generator)
     elif benchmark.lower() == "pcc":
         manager = generator_manager(generators.generator_PCC.PCC_generator)
     else:
