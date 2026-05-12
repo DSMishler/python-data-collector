@@ -31,7 +31,7 @@ class PCC_handler:
         for line in lines:
             words = line.split()
             for i in range(len(words)):
-                if words[i] == "time_total:":
+                if words[i] == "time_total:" or words[i] == "TIME(s)":
                     time_total = pdcutils.dtype_from_word(float, words[i+1])
                     break
                 if words[i] == "time_input:":
@@ -64,7 +64,7 @@ class PCC_handler:
         if time_input is not None:
             data_dest["time_input"].append(time_input)
         else:
-            pass # will cause handler to abort
+            data_dest["time_input"].append(0)
 
         if problem_size_n is not None:
             data_dest["problem_size_n"].append(problem_size_n)

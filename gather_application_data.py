@@ -30,6 +30,8 @@ today        = str(datetime.date.today())
 class generator_manager:
     def __init__(self, subclass):
         self.generator = subclass(today, hostname, target_dir)
+        if stop_hours is not None:
+            self.stop_time = datetime.datetime.now()+datetime.timedelta(hours=stop_hours)
     def generate_pdcstr(self):
         pdcstr = ""
         pdcstr += pdc_cmd
@@ -43,6 +45,9 @@ class generator_manager:
         pdcstr += f"of {self.generator.out_fname}"
         pdcstr += " "
         pdcstr += f"tf {tmp_fname}"
+        if stop_hours is not None:
+            pdcstr += f" "
+            pdcstr += f"st {self.stop_time.isoformat()}"
         print(pdcstr)
         return pdcstr
     def run(self, pdcstr):
@@ -73,6 +78,8 @@ Python gather_application_data.py b PCC td ~/PCC_stuff
 def parse_args(args):
     global target_dir
     global benchmark
+    global stop_hours
+    stop_hours=None
     # parse through arguments in c-like fashion
     i = 1
     while(i < len(args)):
@@ -83,6 +90,9 @@ def parse_args(args):
         if this_arg in ["benchmark", "b"]:
             i += 1
             benchmark = args[i]
+        elif this_arg in ["stop_hours", "sh"]:
+            i += 1
+            stop_hours = int(args[i])
         elif this_arg in ["target_dir", "td", "target"]:
             i += 1
             target_dir = args[i]
@@ -93,6 +103,26 @@ def parse_args(args):
 if __name__ == "__main__":
     begin_time = datetime.datetime.now()
     print(f"begin at {begin_time}")
+
+    if not os.path.exists("mzz_torch.txt"):
+        f = open("mzz_torch.txt", "w")
+        f.write("0")
+        f.close()
+
+    f = open("mzz_torch.txt")
+    ftext = f.read()
+    f.close()
+
+    if ftext == "Done":
+        f = open("mzz_torch.txt", "w")
+        f.write("0")
+        f.close()
+
+    ## CLR guarantor
+    os.system("lscpu")
+    if "clr" not in hostname:
+        print(f"forcing clr in this program, but host is {hostname}. Stop!")
+        exit(0)
 
     parse_args(sys.argv)
     assert benchmark is not None, "you must provide a benchmark"
@@ -124,10 +154,13 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(42000, 60001, 2000)]
-    requested_params["ks"] = [i for i in range(42000, 60001, 6000)]
+    requested_params["Ns"] = [i for i in range(2000, 50001, 2000)]
+    requested_params["ks"] = [i for i in range(5000, 50001, 5000)]
     # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
-    requested_params["codes"] = ["polars"]
+    # requested_params["codes"] = ["dplasma", "syrk_base"]
+    # requested_params["codes"] = ["polars", "dplasma"]
+    requested_params["codes"] = ["dplasma", "polars", "syrk_base"]
+    requested_params["data"] = ["synthetic"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]
     # requested_params["hosts"] = ["weaver6,weaver7"]

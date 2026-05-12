@@ -13,3 +13,8 @@ __pycache__/
 slurm/
 *.csv
 *.tsv
+
+# directories that have no business getting saved
+slurm/*
+oldslurm/*
+saveslurm/*

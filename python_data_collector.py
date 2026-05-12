@@ -4,6 +4,7 @@ import socket
 import re
 import pickle
 import pdcutils
+import datetime
 
 
 # TODOs
@@ -26,7 +27,7 @@ gpd["run_min"]       = {"value": 2,
                         "tfunc": int,
                         "desc" : "minimum runs for each point",
                         "flags": ["run_min", "runs", "nruns"]}
-gpd["run_max"]       = {"value": 5,
+gpd["run_max"]       = {"value": 10,
                         "tfunc": int,
                         "desc" : "error out after this many runs on a point",
                         "flags": ["run_max", "runmax"]}
@@ -54,7 +55,14 @@ gpd["stderr_fname"]  = {"value": "mzz_err_tmp_"+hostname+".txt",
                         "tfunc": str,
                         "desc" : "temp filename for the runfile's stderr",
                         "flags": ["stderr_fname", "ef"]}
-
+gpd["torch_fname"]   = {"value": "mzz_torch.txt",
+                        "tfunc": str,
+                        "desc" : "temp filename for the runfile's 'torch'",
+                        "flags": ["torch_fname"]}
+gpd["stop_time"]     = {"value": None,
+                        "tfunc": datetime.datetime.fromisoformat,
+                        "desc" : "time at which the collector should stop (None=no stop)",
+                        "flags": ["stop_time", "st"]}
 
 help_message = "python data collector. A program designed to make collecting"
 help_message += "data easy and robust in your workflow. Pass any of the"
@@ -207,6 +215,23 @@ class run_manager:
             attr_error  = pdcutils.gaussian_error(self.current_runs[attr])
             return_dict[attr] = {"mean" : attr_mean, "error" : attr_error}
 
+        # for cleanup purposes for isaac:
+        if "lustre" in os.getcwd() and False: # disabled first part for now
+            if os.path.exists("split_input_data/split_sample_0_0.csv"):
+                os.system("rm split_input_data/split_sample*.csv")
+            if os.path.exists("split_output_data/output_0_0.csv"):
+                os.system("rm split_output_data/output*.csv")
+        if "lustre" in os.getcwd():
+            work_path = f"/lustre/isaac24/proj/UTK0348/mishler/efficient_coefficients"
+            datafile = f"{work_path}/synthetic_data/sample_{param_dict['N']['value']}_{param_dict['k']['value']}.csv"
+            if os.path.exists(datafile):
+                os.system(f"rm {datafile}")
+        else:
+            print("HOLD ON THERE PARTNER")
+            print("there's some code up here designed for ISAAC use only")
+            print("clean that up before I do any more work for you")
+            exit(0)
+
         return return_dict
 
     def write_init(self, return_dict):
@@ -226,6 +251,8 @@ class run_manager:
                         print(f"unknown error: possibly triply layered dict?")
         string = string[:-1] + "\n"
         f = open(gpd["output_fname"]['value'], "w")
+        # note: this will only write if the file is not already there, so
+        # there is no need to worry about overwriting the file
         f.write(string)
         f.close()
 
@@ -299,8 +326,16 @@ if __name__ == "__main__":
     ex_commandstr = manager.generate_commandstr(pdcutils.get_nth_dict(params_dict, 0))
     print(f"example command:")
     print(f"```{ex_commandstr}```")
+
+    f = open(gpd['torch_fname']['value'], "r")
+    torch_contents = f.read()
+    try:
+        starting_i = int(torch_contents)
+    except ValueError:
+        starting_i = 0
+    f.close()
     
-    for i in range(pdcutils.count_permutations(params_dict)):
+    for i in range(starting_i, pdcutils.count_permutations(params_dict)):
         param_dict = pdcutils.get_nth_dict(params_dict, i)
         print(f"task {task} to {gpd['output_fname']['value']} with params:")
         for key in param_dict:
@@ -309,6 +344,19 @@ if __name__ == "__main__":
         return_dict = manager.perform_runs_for(param_dict)
         return_dict["host_system"] = hostname
         manager.write(return_dict)
+
+        f = open(gpd['torch_fname']['value'], "w")
+        if i+1 >= pdcutils.count_permutations(params_dict):
+            f.write("Done")
+        else:
+            f.write(str(i+1))
+        f.close()
+
+        if gpd['stop_time']['value'] is not None:
+            if datetime.datetime.now() > gpd['stop_time']['value']:
+                print("running out of time. Breaking now!")
+                break
+
 
     os.system(f"rm {gpd['stdout_fname']['value']}")
     os.system(f"rm {gpd['stderr_fname']['value']}")
