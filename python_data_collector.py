@@ -6,10 +6,10 @@ import pickle
 import pdcutils
 import datetime
 
-
 # TODOs
 # - allow user to choose which handler to use
 # - decide how to handle data you don't necessarily want to permute
+
 
 hostname = socket.gethostname()
 
@@ -221,16 +221,16 @@ class run_manager:
                 os.system("rm split_input_data/split_sample*.csv")
             if os.path.exists("split_output_data/output_0_0.csv"):
                 os.system("rm split_output_data/output*.csv")
+        if "pscratch" in os.getcwd():
+            work_path = f"/pscratch/sd/d/dmishler/efficient_coefficients"
+            datafile = f"{work_path}/synthetic_data/sample_{param_dict['N']['value']}_{param_dict['k']['value']}.csv"
+            if os.path.exists(datafile):
+                os.system(f"rm {datafile}")
         if "lustre" in os.getcwd():
             work_path = f"/lustre/isaac24/proj/UTK0348/mishler/efficient_coefficients"
             datafile = f"{work_path}/synthetic_data/sample_{param_dict['N']['value']}_{param_dict['k']['value']}.csv"
             if os.path.exists(datafile):
                 os.system(f"rm {datafile}")
-        else:
-            print("HOLD ON THERE PARTNER")
-            print("there's some code up here designed for ISAAC use only")
-            print("clean that up before I do any more work for you")
-            exit(0)
 
         return return_dict
 

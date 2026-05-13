@@ -17,7 +17,7 @@ class PCC_generator:
         of += "PCC"
         of += ".csv"
 
-        rf= f"python {self.target_dir}/{self.target_file}"
+        rf= f"python3.11 {self.target_dir}/{self.target_file}"
 
         self.out_fname = of
         self.run_fname = rf

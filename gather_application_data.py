@@ -21,7 +21,7 @@ hostname     = socket.gethostname()
 if hostname.find('.') != -1: # prune dot from hostname if needed
     hostname = hostname[:hostname.find('.')]
 tmp_fname    = f"mzz_gather_{hostname}.txt"
-pdc_root     = "/lustre/isaac24/proj/UTK0348/mishler/python-data-collector"
+pdc_root     = "/pscratch/sd/d/dmishler/python-data-collector"
 pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
 run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     ## CLR guarantor
     os.system("lscpu")
-    if "clr" not in hostname:
+    if "clr" not in hostname and False:
         print(f"forcing clr in this program, but host is {hostname}. Stop!")
         exit(0)
 
@@ -154,8 +154,8 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(2000, 50001, 2000)]
-    requested_params["ks"] = [i for i in range(5000, 50001, 5000)]
+    requested_params["Ns"] = [i for i in range(2000, 6001, 2000)]
+    requested_params["ks"] = [i for i in range(5000, 10001, 5000)]
     # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
     # requested_params["codes"] = ["dplasma", "syrk_base"]
     # requested_params["codes"] = ["polars", "dplasma"]
@@ -169,9 +169,18 @@ if __name__ == "__main__":
 
     # manager.generator.out_fname=pdcutils.add_to_csv_fname(manager.generator.out_fname, "_XBUS")
 
+    # Final steps: cleanup from old runs
+    os.system(f"rm -rf split_input_data")
+
+    os.system(f"echo {max(requested_params['Ns'])} > {target_dir}/mzz_max_N.txt")
+    os.system(f"echo {max(requested_params['ks'])} > {target_dir}/mzz_max_K.txt")
+
     manager.all_runs(requested_params)
 
     os.system(f"rm -f {run_ps_fname}")
+
+    os.system(f"rm -f {target_dir}/mzz_max_N.txt")
+    os.system(f"rm -f {target_dir}/mzz_max_K.txt")
 
     print(f"began at {begin_time}")
     print(f"ended at {datetime.datetime.now()}")
