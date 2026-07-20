@@ -14,6 +14,7 @@ import datetime
 import pickle
 import pdcutils
 
+w_python = "python"
 
 target_dir   = None
 benchmark    = None
@@ -22,7 +23,7 @@ if hostname.find('.') != -1: # prune dot from hostname if needed
     hostname = hostname[:hostname.find('.')]
 tmp_fname    = f"mzz_gather_{hostname}.txt"
 pdc_root     = "/pscratch/sd/d/dmishler/python-data-collector"
-pdc_cmd      = f"python {pdc_root}/python_data_collector.py"
+pdc_cmd      = f"{w_python} {pdc_root}/python_data_collector.py"
 run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
 
@@ -154,12 +155,13 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(2000, 6001, 2000)]
+    requested_params["Ns"] = [i for i in range(2000, 60001, 2000)]
     requested_params["ks"] = [i for i in range(5000, 10001, 5000)]
     # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
     # requested_params["codes"] = ["dplasma", "syrk_base"]
     # requested_params["codes"] = ["polars", "dplasma"]
-    requested_params["codes"] = ["dplasma", "polars", "syrk_base"]
+    # requested_params["codes"] = ["syrk_base", "polars", "dplasma"]
+    requested_params["codes"] = ["syrk_base"]
     requested_params["data"] = ["synthetic"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]

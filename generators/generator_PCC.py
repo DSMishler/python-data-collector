@@ -1,5 +1,7 @@
 # PCC: Pearson Correlation Coefficient
 
+w_python = "python"
+
 class PCC_generator:
     def __init__(self, today, hostname, target_dir):
         self.name        = "PCC_generator"
@@ -17,7 +19,7 @@ class PCC_generator:
         of += "PCC"
         of += ".csv"
 
-        rf= f"python3.11 {self.target_dir}/{self.target_file}"
+        rf= f"{w_python} {self.target_dir}/{self.target_file}"
 
         self.out_fname = of
         self.run_fname = rf
