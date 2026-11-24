@@ -119,12 +119,15 @@ if __name__ == "__main__":
         f.write("0")
         f.close()
 
+<<<<<<< HEAD
     ## CLR guarantor
     os.system("lscpu")
     if "clr" not in hostname and False:
         print(f"forcing clr in this program, but host is {hostname}. Stop!")
         exit(0)
 
+=======
+>>>>>>> 2b3384f (updating for PCC data)
     parse_args(sys.argv)
     assert benchmark is not None, "you must provide a benchmark"
     assert target_dir is not None, "you must provide a target directory"
@@ -155,13 +158,11 @@ if __name__ == "__main__":
     
     requested_params = {} # currently for heat3d 1 node
     # requested_params["Ns"] = pdcutils.generate_log_scale_stepped_array(1e3,1e4,1.2)
-    requested_params["Ns"] = [i for i in range(2000, 60001, 2000)]
-    requested_params["ks"] = [i for i in range(5000, 10001, 5000)]
+    requested_params["Ns"] = [i for i in range(5000, 50001, 5000)]
+    requested_params["ks"] = [i for i in range(5000, 50001, 5000)]
     # requested_params["codes"] = ["original", "ompb", "omps", "ompd", "norm"]
-    # requested_params["codes"] = ["dplasma", "syrk_base"]
-    # requested_params["codes"] = ["polars", "dplasma"]
-    # requested_params["codes"] = ["syrk_base", "polars", "dplasma"]
-    requested_params["codes"] = ["syrk_base"]
+    requested_params["codes"] = ["dplasma"]
+    # requested_params["codes"] = ["dplasma", "polars", "syrk_base"]
     requested_params["data"] = ["synthetic"]
     # requested_params["iterations"] = [500]
     # requested_params["modes"] = [0,1,3]

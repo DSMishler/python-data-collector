@@ -20,24 +20,20 @@ categories = [
     "compute_end"]
 
 
-files_to_read = {category: [] for category in categories}
 
-all_files = os.listdir(timing_dir)
-for fname in all_files:
-    for category in categories:
-        if fname[:len(category)] == category:
-            files_to_read[category].append(fname)
-            break
+all_timings = {}
 
-timings = {category: [] for category in categories}
-
-for cat in files_to_read:
-    category = files_to_read[cat]
-    for fname in category:
-        f = open(timing_dir+fname, "r")
-        val = float(f.read())
-        f.close()
-        timings[cat].append(val)
+for cat in categories:
+    all_timings[cat] = {}
+    fname = "timing_data/"+cat+".txt"
+    f = open(fname)
+    ftxt = f.read()
+    f.close()
+    for line in ftxt.split('\n'):
+        if len(line) == 0:
+            continue
+        (info, walltime) = line.split(':')
+        all_timings[cat][info] = float(walltime)
 
 
 attributes = [
@@ -50,16 +46,16 @@ for att in attributes:
     # get the times
     att_begin = None
     att_end = None
-    for cat in timings:
+    for cat in all_timings:
         if cat[:len(att)] == att:
             if "begin" == cat[-5:]:
-                att_begin = timings[cat]
+                att_begin = all_timings[cat]
             elif "end" == cat[-3:]:
-                att_end = timings[cat]
+                att_end = all_timings[cat]
             else:
                 print(f"error, {cat} is not a beginning or end?")
-    true_begin = min(att_begin)
-    true_end = max(att_end)
+    true_begin = min(att_begin.values())
+    true_end = max(att_end.values())
     true_time = true_end-true_begin
     print(f"time_{att}: {true_time}")
 
