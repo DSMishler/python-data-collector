@@ -216,11 +216,6 @@ class run_manager:
             return_dict[attr] = {"mean" : attr_mean, "error" : attr_error}
 
         # for cleanup purposes for isaac:
-        if "lustre" in os.getcwd() and False: # disabled first part for now
-            if os.path.exists("split_input_data/split_sample_0_0.csv"):
-                os.system("rm split_input_data/split_sample*.csv")
-            if os.path.exists("split_output_data/output_0_0.csv"):
-                os.system("rm split_output_data/output*.csv")
         if "pscratch" in os.getcwd():
             work_path = f"/pscratch/sd/d/dmishler/efficient_coefficients"
             datafile = f"{work_path}/synthetic_data/sample_{param_dict['N']['value']}_{param_dict['k']['value']}.csv"

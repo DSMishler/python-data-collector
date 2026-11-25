@@ -22,7 +22,7 @@ hostname     = socket.gethostname()
 if hostname.find('.') != -1: # prune dot from hostname if needed
     hostname = hostname[:hostname.find('.')]
 tmp_fname    = f"mzz_gather_{hostname}.txt"
-pdc_root     = "/pscratch/sd/d/dmishler/python-data-collector"
+pdc_root     = "/lustre/isaac24/proj/UTK0348/mishler/python-data-collector"
 pdc_cmd      = f"{w_python} {pdc_root}/python_data_collector.py"
 run_ps_fname = f"mzz_run_ps_{hostname}.txt"
 today        = str(datetime.date.today())
@@ -119,15 +119,6 @@ if __name__ == "__main__":
         f.write("0")
         f.close()
 
-<<<<<<< HEAD
-    ## CLR guarantor
-    os.system("lscpu")
-    if "clr" not in hostname and False:
-        print(f"forcing clr in this program, but host is {hostname}. Stop!")
-        exit(0)
-
-=======
->>>>>>> 2b3384f (updating for PCC data)
     parse_args(sys.argv)
     assert benchmark is not None, "you must provide a benchmark"
     assert target_dir is not None, "you must provide a target directory"
